@@ -17,6 +17,15 @@ class CustomUserAdmin(UserAdmin):
         ('Client & Roles', {'fields': ('client', 'roles')}),
     )
 
+    # El alta de UserAdmin solo pide usuario y contraseñas; el cliente es
+    # obligatorio (FK + CustomUser.clean), así que hay que pedirlo aquí.
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('client', 'username', 'email', 'usable_password', 'password1', 'password2'),
+        }),
+    )
+
     filter_horizontal = ('roles',)  # útil para ManyToMany
 
     def get_roles(self, obj):
