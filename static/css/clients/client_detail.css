@@ -357,6 +357,8 @@
 .info-grid-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem 1.5rem; }
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 1.5rem; }
 .muted { color: var(--muted-color); }
+[data-pwa-install] .btn[hidden], [data-pwa-install] [hidden] { display: none; }   /* .btn fija display: hay que repetir [hidden] */
+[data-pwa-install] [data-pwa-help] { margin: 0.75rem 0 0; }
 
 .table tr.is-me td { background: color-mix(in srgb, var(--color-info) 6%, transparent); }
 

@@ -96,6 +96,16 @@
     </form>
   </div>
 
+  <!-- Acceso directo / instalación -->
+  <div class="client-card client-card-full" data-pwa-install>
+    <h2><i class="fa-solid fa-download"></i> Acceso directo</h2>
+    <p class="info-value muted" data-pwa-status>Instala FacturIA en el escritorio o en la pantalla de inicio para abrirla como una app, sin barra del navegador.</p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" data-pwa-btn><i class="fa-solid fa-download"></i> Instalar acceso directo</button>
+    </div>
+    <p class="info-value muted" data-pwa-help hidden></p>
+  </div>
+
 {% endif %}
 
 {% if tab == 'empresa' %}
@@ -295,6 +305,7 @@
 {% block scripts %}
 {{ block.super }}
 <script src="{% static 'js/edit-toggle.js' %}"></script>
+<script src="{% static 'js/pwa-install.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
