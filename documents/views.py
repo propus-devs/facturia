@@ -29,6 +29,7 @@ from .services import upload as upload_service
 from billing_ai import listing
 from django.urls import reverse
 from billing_ai.storage import private_file_response
+from billing_ai.viewer import file_kind, render_file_viewer
 
 User = get_user_model()
 
@@ -585,6 +586,26 @@ class DocumentFileView(LoginRequiredMixin, View):
             client=request.user.client,
         )
         return private_file_response(document.file, download_name=document.original_name or None)
+
+
+class DocumentViewerView(LoginRequiredMixin, View):
+    """Archivo original a pantalla completa, dentro de la app y con botón «Volver»."""
+
+    def get(self, request, pk):
+        document = get_object_or_404(
+            Document.all_objects.only("id", "client_id", "file", "original_name"),
+            pk=pk,
+            client=request.user.client,
+        )
+        if not document.file:
+            raise Http404("Archivo no encontrado")
+        return render_file_viewer(
+            request,
+            title=document.original_name or "Documento",
+            file_url=reverse("documents:file", args=[document.pk]),
+            kind=file_kind(document.file.name),
+            back_url=reverse("documents:detail", args=[document.pk]),
+        )
 
 
 

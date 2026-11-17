@@ -5,7 +5,7 @@
 
 /* ---------- Cabecera ---------- */
 .page-title {
-  display: flex; align-items: center; gap: 0.6rem;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; overflow-wrap: anywhere;   /* título largo (carpeta, empresa) o botón: pasan a otra línea en vez de desbordar */
   margin: 0 0 1.1rem; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; color: var(--body-fg-color);
 }
 .page-title > i:first-child {
@@ -63,7 +63,7 @@
 /* Panel desplegable con los filtros agrupados */
 .filter-panel[hidden] { display: none; }
 .filter-panel { display: flex; flex-direction: column; gap: 1rem; animation: rise 0.3s ease both; }
-.filter-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.9rem; }
+.filter-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 0.9rem; }
 .fgroup {
   margin: 0; padding: 0.85rem 0.95rem 0.95rem; min-width: 0;
   border: 1px solid var(--border-color); border-radius: 12px; background: color-mix(in srgb, var(--body-bg-color) 45%, transparent);
@@ -103,7 +103,7 @@
 .filter-chip:hover .x { color: var(--color-danger); }
 
 /* ---------- Resumen y barra de resultados ---------- */
-.summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
+.summary-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap: 0.8rem; margin-bottom: 1rem; }
 .summary-chip {
   --tone: var(--muted-color);
   display: flex; flex-direction: column; gap: 0.15rem; padding: 0.75rem 1rem;
@@ -140,6 +140,19 @@
 .table td.name-cell { max-width: 280px; }
 .table td.name-cell a { overflow-wrap: anywhere; }
 
+/* Nombre de archivo largo: una línea que se recorta con «…» pero conserva el final (últimos dígitos + extensión).
+   static/js/filename.js reparte el texto en .fname-head / .fname-tail; sin JS se mantiene el ajuste de línea. */
+.fname { display: inline-flex; min-width: 0; max-width: 100%; vertical-align: bottom; }
+.fname-head { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+.fname-tail { flex: 0 0 auto; white-space: pre; }
+
+/* En tarjetas (móvil/tablet) la celda ocupa todo el ancho: nombre arriba, chips debajo en fila */
+@container tablewrap (max-width: 760px) {
+  .table td.name-cell { max-width: none; }
+  .table-cards td.name-cell { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 0.15rem 0; }
+  .table-cards td.name-cell > a, .table-cards td.name-cell > .cell-sub { flex: 1 1 100%; min-width: 0; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .page-title { font-size: 1.15rem; }
@@ -154,4 +167,26 @@
   .table-footer-bar { justify-content: center; }
   .pager .num { display: none; }                  /* solo « ‹ › » en pantallas pequeñas */
   .pager .num.current { display: inline-flex; }
+
+  /* Resumen en dos columnas (en una sola, 7 chips ocupaban media pantalla); cifra algo menor y sin desbordar */
+  .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .summary-strip:not(:has(.summary-chip-text)) > :last-child:nth-child(odd) { grid-column: 1 / -1; }   /* el chip suelto ocupa la fila (la vista de exportación ya reparte el suyo) */
+  .summary-chip { padding: 0.6rem 0.75rem; }
+  .summary-chip strong { font-size: 1.05rem; overflow-wrap: anywhere; }
+}
+@media (max-width: 480px) {
+  .page-title .page-actions { flex: 1 1 100%; margin-left: 0; }
+  .page-title .page-actions .btn { flex: 1; }
+}
+
+/* Táctil: pestañas, paginación, chips y casillas con objetivo de ~44 px */
+@media (pointer: coarse) {
+  .status-tab { display: inline-flex; align-items: center; min-height: 2.5rem; padding-inline: 0.95rem; }
+  .pager a, .pager span.page { min-width: 2.75rem; height: 2.75rem; }
+  .pager .gap { min-width: 1.25rem; }
+  .filter-chip { min-height: 2.5rem; padding-block: 0.2rem; }
+  .filter-chip .x { width: 1.75rem; height: 1.75rem; }
+  .check { min-height: 2.75rem; }
+  .check input { width: 1.35rem; height: 1.35rem; flex-shrink: 0; }
+  .check label { flex: 1; align-self: stretch; display: flex; align-items: center; }
 }

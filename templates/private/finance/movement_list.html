@@ -114,7 +114,7 @@
           {% if movement.payment_method %}<span class="badge-method"><i class="fa-solid {{ movement.payment_icon }}"></i> {{ movement.get_payment_method_display }}</span>{% else %}—{% endif %}
         </td>
         <td class="receipt" data-label="Recibo">
-          {% if movement.has_receipt %}<a href="{% url 'finance:receipt' movement.pk %}" target="_blank" rel="noopener" class="receipt-link"><i class="fa-solid fa-paperclip"></i> Ver recibo</a>{% else %}—{% endif %}
+          {% if movement.has_receipt %}<a href="{% url 'finance:receipt_view' movement.pk %}" class="receipt-link"><i class="fa-solid fa-paperclip"></i> Ver recibo</a>{% else %}—{% endif %}
         </td>
         <td data-label="Estado">{% if movement.is_reconciled %}{% badge "reconcile" "reconciled" %}{% else %}{% badge "reconcile" "pending" %}{% endif %}</td>
         <td class="amount cell-highlight {% if movement.movement_type == 'income' %}income{% else %}expense{% endif %}" data-label="Importe">

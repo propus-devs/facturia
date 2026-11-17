@@ -4,7 +4,7 @@
       <tr class="clickable-row" data-href="{% url 'documents:detail' doc.id %}">
         <td data-label="N.º factura">{{ doc.document_number|default:"—" }}</td>
         <td class="name-cell cell-primary" data-label="Nombre">
-          <a href="{% url 'documents:file' doc.pk %}">{{ doc.original_name }}</a>
+          <a href="{% url 'documents:viewer' doc.pk %}">{{ doc.original_name }}</a>
           {% if doc.drive_reason %}<small class="cell-sub">{{ doc.drive_reason }}</small>{% endif %}
           {% if doc.folder %}<span class="chip">{% icon "folder" %} {{ doc.folder.name }}</span>{% endif %}
           {% for t in doc.tags.all %}<span class="chip">{{ t.name }}</span>{% endfor %}

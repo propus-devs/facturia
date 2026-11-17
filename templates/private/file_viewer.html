@@ -1,0 +1,27 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% include "components/_head.html" %}
+  <link rel="stylesheet" href="{% static 'css/viewer.css' %}">
+  <title>{{ title }} - FacturIA</title>
+</head>
+<body class="viewer-page">
+<div class="viewer-app">
+    <header class="viewer-bar">
+        <a class="btn btn-ghost" href="{{ back_url }}" data-back aria-label="Volver"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+        <h1 class="viewer-title" title="{{ title }}">{{ title }}</h1>
+        <a class="btn btn-ghost" href="{{ file_url }}" download aria-label="Descargar" title="Descargar"><i class="fa-solid fa-download"></i></a>
+    </header>
+
+    <main class="pdf viewer-full" data-viewer-full data-file-url="{{ file_url }}" data-file-type="{% if kind == 'pdf' %}pdf{% else %}image{% endif %}">
+        {% if kind == "pdf" or kind == "image" %}
+            {% include "components/_viewer.html" with is_pdf=is_pdf download_url=file_url %}
+        {% else %}
+            <p class="viewer-fallback">No se puede visualizar este tipo de archivo. <a href="{{ file_url }}" download>Descargar</a></p>
+        {% endif %}
+    </main>
+</div>
+{% if kind == "pdf" %}<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>{% endif %}
+{% if kind == "pdf" or kind == "image" %}<script src="{% static 'js/document-viewer.js' %}"></script>{% endif %}
+</body>
+</html>

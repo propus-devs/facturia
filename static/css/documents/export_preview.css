@@ -48,6 +48,14 @@
   .pdf-preview { height: 420px; }
 }
 @media (max-width: 640px) {
+  .export-bar { padding: 0.75rem; }
   .export-bar-actions .btn-primary { flex: 1; }
+  .summary-chip-text { grid-column: 1 / -1; }      /* «Rango de fechas» es largo: fila completa */
   .pdf-preview { height: 320px; }
+}
+
+/* Táctil: casillas de selección más grandes (la de la cabecera marca/desmarca todas) */
+@media (pointer: coarse) {
+  .table input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
+  .table .col-select { width: 3rem; }
 }

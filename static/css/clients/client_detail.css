@@ -1,13 +1,14 @@
 .client-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);   /* minmax(0): un correo o URL largos no ensanchan la columna */
   gap: 1.5rem;
   align-items: start;
 }
 
 @media (max-width: 768px) {
   .client-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
   }
 }
 
@@ -59,7 +60,9 @@
   font-size: 0.95rem;
   color: var(--body-fg-color);
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
+.info-field > a.link { overflow-wrap: anywhere; }
 
 .info-value.muted {
   color: var(--muted-color);
@@ -352,15 +355,15 @@
 [data-editable][data-mode="company"] [data-panel="company"] { display: block; }
 [data-editable][data-mode] .view-mode { display: none; }
 .view-mode .form-actions { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.form-actions .btn + .btn { margin-left: 0.5rem; }
-.view-mode .form-actions .btn + .btn { margin-left: 0; }
-.info-grid-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem 1.5rem; }
-.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 1.5rem; }
+.form-actions { flex-wrap: wrap; gap: 0.5rem; }
+.form-actions .btn + .btn { margin-left: 0; }
+.info-grid-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem 1.5rem; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 1.5rem; }
 .muted { color: var(--muted-color); }
 [data-pwa-install] .btn[hidden], [data-pwa-install] [hidden] { display: none; }   /* .btn fija display: hay que repetir [hidden] */
 [data-pwa-install] [data-pwa-help] { margin: 0.75rem 0 0; }
 
-.table tr.is-me td { background: color-mix(in srgb, var(--color-info) 6%, transparent); }
+.table tr.is-me { background: color-mix(in srgb, var(--color-info) 6%, transparent); }   /* en la fila (no en cada celda) para que también se vea en tarjetas */
 
 /* Pestañas «Mi perfil» / «Mi empresa» */
 .account-tabs { display: flex; gap: 0.3rem; width: fit-content; max-width: 100%; margin: 0 0 1.25rem; padding: 0.25rem; border-radius: 12px; background: var(--body-bg-color); border: 1px solid var(--border-color); overflow-x: auto; }
@@ -369,4 +372,10 @@
 .account-tab.active { color: var(--enfasis-color); background: color-mix(in srgb, var(--enfasis-color) 14%, transparent); }
 .tab-intro { grid-column: 1 / -1; margin: 0; color: var(--muted-color); font-size: 0.9rem; }
 .tab-intro strong { color: var(--body-fg-color); }
-@media (max-width: 480px) { .account-tabs { width: 100%; } .account-tab { flex: 1; justify-content: center; padding-inline: 0.6rem; } }
+@media (max-width: 480px) {
+  .account-tabs { width: 100%; }
+  .account-tab { flex: 1; justify-content: center; padding-inline: 0.6rem; }
+  .client-card { padding: 1rem; }
+  .form-actions .btn { flex: 1 1 auto; }
+}
+@media (pointer: coarse) { .account-tab { min-height: 2.75rem; box-sizing: border-box; } }

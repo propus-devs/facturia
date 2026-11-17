@@ -47,7 +47,7 @@
         <summary><i class="fa-regular fa-file-image"></i> Recibo actual: {{ form.instance.receipt_name }}</summary>
         <div class="receipt-body">
           <img src="{% url 'finance:receipt' form.instance.pk %}" alt="Recibo del movimiento">
-          <a class="link" href="{% url 'finance:receipt' form.instance.pk %}" target="_blank" rel="noopener">Abrir en una pestaña nueva</a>
+          <a class="link" href="{% url 'finance:receipt_view' form.instance.pk %}">Ver recibo</a>
         </div>
       </details>
       {% endif %}

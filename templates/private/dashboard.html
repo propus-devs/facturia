@@ -169,7 +169,7 @@
     </header>
     {% if pending_documents %}
     <div class="table-wrapper flat">
-      <table class="table">
+      <table class="table table-cards">
         <thead>
           <tr>
             <th>Proveedor</th><th>Fecha</th><th class="hide-sm">Tipo</th><th class="hide-md">Revisión</th><th class="num">Total</th><th></th>
@@ -178,12 +178,12 @@
         <tbody>
           {% for doc in pending_documents %}
           <tr class="clickable-row" data-href="{% url 'documents:detail' doc.id %}">
-            <td>{{ doc.company.name|default:"—" }}</td>
-            <td>{{ doc.issue_date|pretty_date|default:"—" }}</td>
-            <td class="hide-sm">{{ doc.get_document_type_display|default:"—" }}</td>
-            <td class="hide-md">{% if doc.is_processing or doc.processing_status == "failed" %}{% badge "processing" doc.processing_status %}{% else %}{% badge "review" doc.review_key %}{% endif %}</td>
-            <td class="amount">{% if doc.total_amount %}{{ doc.total_amount|floatformat:2 }} €{% else %}—{% endif %}</td>
-            <td class="col-actions"><a href="{% url 'documents:detail' doc.id %}" class="btn btn-ghost btn-sm">{% icon "view" %} Ver</a></td>
+            <td class="cell-primary" data-label="Proveedor">{{ doc.company.name|default:"—" }}</td>
+            <td data-label="Fecha">{{ doc.issue_date|pretty_date|default:"—" }}</td>
+            <td class="hide-sm" data-label="Tipo">{{ doc.get_document_type_display|default:"—" }}</td>
+            <td class="hide-md" data-label="Revisión">{% if doc.is_processing or doc.processing_status == "failed" %}{% badge "processing" doc.processing_status %}{% else %}{% badge "review" doc.review_key %}{% endif %}</td>
+            <td class="amount cell-highlight" data-label="Total">{% if doc.total_amount %}{{ doc.total_amount|floatformat:2 }} €{% else %}—{% endif %}</td>
+            <td class="col-actions cell-actions"><a href="{% url 'documents:detail' doc.id %}" class="btn btn-ghost btn-sm">{% icon "view" %} Ver</a></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -202,15 +202,15 @@
     </header>
     {% if recent_movements %}
     <div class="table-wrapper flat">
-      <table class="table">
+      <table class="table table-cards">
         <thead><tr><th>Fecha</th><th class="hide-sm">Categoría</th><th>Concepto</th><th class="num">Importe</th></tr></thead>
         <tbody>
           {% for m in recent_movements %}
           <tr>
-            <td>{{ m.date|pretty_date }}</td>
-            <td class="hide-sm">{{ m.category.name }}</td>
-            <td>{{ m.description|default:"—" }}</td>
-            <td class="amount {% if m.movement_type == 'income' %}pos{% else %}neg{% endif %}">{% if m.movement_type == 'income' %}+{% else %}−{% endif %}{{ m.amount|spanish_currency }} €</td>
+            <td data-label="Fecha">{{ m.date|pretty_date }}</td>
+            <td class="hide-sm cell-sub" data-label="Categoría">{{ m.category.name }}</td>
+            <td class="cell-primary" data-label="Concepto">{{ m.description|default:"—" }}</td>
+            <td class="amount cell-highlight {% if m.movement_type == 'income' %}pos{% else %}neg{% endif %}" data-label="Importe">{% if m.movement_type == 'income' %}+{% else %}−{% endif %}{{ m.amount|spanish_currency }} €</td>
           </tr>
           {% endfor %}
         </tbody>

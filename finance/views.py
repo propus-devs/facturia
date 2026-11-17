@@ -5,11 +5,12 @@ from .forms import FinancialMovementForm, MovementCategoryForm
 from django.db.models import ProtectedError
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect
 from .filters import get_filtered_movements
 from django.shortcuts import get_object_or_404
 from django.views import View
 from billing_ai.storage import private_file_response
+from billing_ai.viewer import file_kind, render_file_viewer
 from billing_ai import listing
 from django.db.models import Count, Q, Sum
 
@@ -236,3 +237,21 @@ class FinancialMovementReceiptView(LoginRequiredMixin, View):
             FinancialMovement, pk=pk, client=request.user.client
         )
         return private_file_response(movement.receipt)
+
+
+class FinancialMovementReceiptViewerView(LoginRequiredMixin, View):
+    """Recibo a pantalla completa, dentro de la app y con botón «Volver»."""
+
+    def get(self, request, pk):
+        movement = get_object_or_404(
+            FinancialMovement, pk=pk, client=request.user.client
+        )
+        if not movement.receipt:
+            raise Http404("Archivo no encontrado")
+        return render_file_viewer(
+            request,
+            title=movement.receipt_name or "Recibo",
+            file_url=reverse("finance:receipt", args=[movement.pk]),
+            kind=file_kind(movement.receipt.name),
+            back_url=reverse("finance:edit_movement", args=[movement.pk]),
+        )

@@ -2,7 +2,7 @@ from django.urls import path
 from documents.views import (
     DocumentListView, DocumentDetailView, DocumentExportView,
     DocumentExportPreviewView, DocumentRectifyView, DocumentPDFPreviewView,
-    DocumentFileView, DocumentUploadView, DocumentDriveView, DriveFolderActionView,
+    DocumentFileView, DocumentViewerView, DocumentUploadView, DocumentDriveView, DriveFolderActionView,
 )
 
 app_name = "documents"
@@ -15,6 +15,7 @@ urlpatterns = [
     path("archivo/<path:ruta>", DocumentDriveView.as_view(), name="drive"),
     path("<int:pk>/", DocumentDetailView.as_view(), name="detail"),
     path("<int:pk>/file/", DocumentFileView.as_view(), name="file"),
+    path("<int:pk>/view/", DocumentViewerView.as_view(), name="viewer"),
     path("<int:pk>/rectify", DocumentRectifyView.as_view(), name="rectify"),
     path("export/", DocumentExportView.as_view(), name="export"),
     path("export/preview/", DocumentExportPreviewView.as_view(), name="export_preview"),

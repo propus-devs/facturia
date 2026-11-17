@@ -221,6 +221,16 @@
 
 /* ---------- Móvil: card primero, pasos debajo ---------- */
 .login-access { order: -1; }
+@media (max-width: 380px) {
+  .login-page { padding-inline: 1rem; }
+  .login-card { padding: 1.5rem 1.25rem 1.25rem; }
+}
+
+/* Táctil: botón de mostrar contraseña con objetivo de 44 px (y el texto no pasa por debajo) */
+@media (pointer: coarse) {
+  .password-toggle { width: 2.75rem; height: 2.75rem; right: 0; }
+  .login-card input[type="password"] { padding-right: 3rem; }
+}
 
 /* ---------- Tablet ---------- */
 @media (min-width: 640px) {

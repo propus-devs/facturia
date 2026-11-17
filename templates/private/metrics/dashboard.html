@@ -199,8 +199,11 @@
       <div class="automation">
         <div class="donut-box">
           {% if automation.has_decisions %}
-          <canvas id="decisionsChart" aria-label="Distribución de decisiones"></canvas>
-          <div class="donut-center" id="donutCenter"></div>
+          <div class="donut-canvas">
+            <canvas id="decisionsChart" aria-label="Distribución de decisiones"></canvas>
+            <div class="donut-center" id="donutCenter"></div>
+          </div>
+          <ul class="donut-legend" id="donutLegend"></ul>
           {% else %}<p class="empty">Sin decisiones en el periodo.</p>{% endif %}
         </div>
         <ul class="gauges">

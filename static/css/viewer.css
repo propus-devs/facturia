@@ -1,0 +1,69 @@
+/* ==========================================================================
+   Visor de documentos (PDF / imagen): barra de herramientas + superficie con zoom,
+   giro y arrastre. Lo dibuja static/js/document-viewer.js; markup en components/_viewer.html.
+   Lo usan el detalle, la rectificación y la pantalla completa (file_viewer.html).
+   ========================================================================== */
+
+.pdf { display: flex; flex-direction: column; min-height: 0; }
+
+/* ---------- Barra de herramientas ---------- */
+.viewer-toolbar {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.35rem 0.9rem;
+  padding: 0.45rem 0.75rem;
+  background: color-mix(in srgb, var(--card-bg-color) 94%, #fff);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--body-fg-color); font-size: 0.85rem; font-weight: 600;
+}
+.viewer-group { display: inline-flex; align-items: center; gap: 0.3rem; }
+.viewer-toolbar button, .viewer-toolbar .toolbar-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2.25rem; height: 2.25rem; padding: 0 0.55rem;
+  background: var(--surface-hover); color: var(--body-fg-color);
+  border: 1px solid var(--border-color-strong); border-radius: 8px;
+  font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.viewer-toolbar button:hover:not(:disabled), .viewer-toolbar .toolbar-link:hover { background: color-mix(in srgb, var(--enfasis-color) 18%, transparent); border-color: var(--enfasis-color); }
+.viewer-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.viewer-toolbar button:focus-visible, .viewer-toolbar .toolbar-link:focus-visible { outline: 2px solid var(--enfasis-color); outline-offset: 2px; }
+.viewer-toolbar .pdf-pages { min-width: 3.2rem; text-align: center; font-weight: 500; color: var(--muted-color); font-variant-numeric: tabular-nums; }
+
+@media (pointer: coarse) {
+  .viewer-toolbar button, .viewer-toolbar .toolbar-link { min-width: 2.75rem; height: 2.75rem; }
+}
+
+/* ---------- Superficie ---------- */
+.viewer-surface {
+  position: relative; flex: 1; min-height: 0; width: 100%; overflow: hidden;
+  background: var(--body-bg-color);
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  touch-action: pan-y;               /* sin zoom, un dedo sigue haciendo scroll de la página */
+}
+.viewer-surface:focus { outline: none; }
+.viewer-surface:focus-visible { outline: 2px solid var(--enfasis-color); outline-offset: -2px; }
+.viewer-surface.is-zoomed { touch-action: none; cursor: grab; }   /* con zoom, el dedo mueve el documento */
+.viewer-surface.is-grabbing { cursor: grabbing; }
+
+.viewer-stage { position: absolute; left: 50%; top: 50%; transform-origin: center; will-change: transform; pointer-events: none; }
+.viewer-stage > canvas, .viewer-stage > img { display: block; width: 100%; height: 100%; max-width: none; -webkit-user-drag: none; }
+.viewer-stage > img { object-fit: contain; }
+
+.viewer-fallback { margin: 0; padding: 1rem; color: var(--muted-color); }
+.viewer-fallback[hidden] { display: none; }
+.viewer-fallback a { color: var(--enfasis-color); }
+
+/* ---------- Pantalla completa ---------- */
+.viewer-page { height: 100%; overflow: hidden; overscroll-behavior: none; }
+.viewer-app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+.viewer-bar {
+  display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+  padding: 0.5rem 0.75rem; padding-top: calc(0.5rem + env(safe-area-inset-top));
+  padding-left: calc(0.75rem + env(safe-area-inset-left)); padding-right: calc(0.75rem + env(safe-area-inset-right));
+  background: var(--body-bg-color); border-bottom: 1px solid var(--border-color);
+}
+.viewer-bar .btn { flex-shrink: 0; }
+.viewer-title { flex: 1; min-width: 0; margin: 0; font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.viewer-full { flex: 1; min-height: 0; }
+.viewer-full .viewer-surface { touch-action: none; cursor: grab; }   /* aquí el dedo siempre mueve/zoomea el documento */
+.viewer-full .viewer-toolbar { padding-bottom: calc(0.45rem + env(safe-area-inset-bottom)); border-bottom: 0; border-top: 1px solid var(--border-color); order: 2; }
+.viewer-full .viewer-fallback { order: 1; }

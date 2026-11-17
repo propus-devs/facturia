@@ -228,7 +228,7 @@
   <div class="client-card client-card-full">
     <h2><i class="fa-solid fa-users"></i> Usuarios ({{ users|length }})</h2>
     {% if users %}
-      <div class="table-wrapper"><table class="table">
+      <div class="table-wrapper"><table class="table table-cards">
         <thead>
           <tr>
             <th>Usuario</th>
@@ -240,22 +240,22 @@
         <tbody>
           {% for user in users %}
           <tr{% if user.pk == request.user.pk %} class="is-me"{% endif %}>
-            <td>{{ user.username }}{% if user.pk == request.user.pk %} <span class="badge-status tone-info">Tú</span>{% endif %}</td>
-            <td>
+            <td class="cell-primary" data-label="Usuario">{{ user.username }}{% if user.pk == request.user.pk %} <span class="badge-status tone-info">Tú</span>{% endif %}</td>
+            <td data-label="Nombre">
               {% if user.get_full_name %}
                 {{ user.get_full_name }}
               {% else %}
                 <span style="color: var(--muted-color);">—</span>
               {% endif %}
             </td>
-            <td>
+            <td data-label="Email">
               {% if user.email %}
                 {{ user.email }}
               {% else %}
                 <span style="color: var(--muted-color);">—</span>
               {% endif %}
             </td>
-            <td>
+            <td data-label="Roles">
               {% for role in user.roles.all %}
                 <span class="role-tag">{{ role.name }}</span>
               {% empty %}

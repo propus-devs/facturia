@@ -54,7 +54,7 @@
 }
 
 /* ---------- Carpetas: una sola estructura, dos disposiciones (data-view) ---------- */
-.folder-view { margin: 0 0 1.25rem; }
+.folder-view { margin: 0 0 1.25rem; container: folders / inline-size; }
 .folder-list { margin: 0; padding: 0; list-style: none; }
 
 /* Lista (por defecto): una línea por carpeta */
@@ -210,9 +210,9 @@
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 640px) {
-  .drive-crumbs a, .drive-crumbs [aria-current="page"] { max-width: 16ch; }
-  .drive-fields { grid-template-columns: 1fr; }
+/* La lista de carpetas se adapta al ancho REAL de su contenedor (con el sidebar, una tablet de 800 px
+   deja solo ~500 px de contenido y las 5 columnas fijas aplastaban el nombre). */
+@container folders (max-width: 640px) {
   /* lista compacta: nombre + pendientes arriba, documentos + total debajo */
   .folder-head { display: none; }
   .folder-row {
@@ -220,17 +220,29 @@
     grid-template-areas: "icon name pending" "icon meta total";
   }
   .folder-view[data-view="grid"] .folder-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 7.5rem), 1fr)); }
-  .folder-view.is-manual { --actions-w: 4.4rem; }
   .folder-view.is-manual .folder-row {
     grid-template-columns: 1.9rem minmax(0, 1fr) auto;
     grid-template-areas: "icon name pending" "icon meta meta";
   }
   .folder-meta { white-space: normal; }
+  .folder-rename { flex-wrap: wrap; }
+  .folder-rename input { flex-basis: calc(100% - 2.4rem); }
+}
+@media (max-width: 640px) {
+  .drive-crumbs a, .drive-crumbs [aria-current="page"] { max-width: 16ch; }
+  .drive-fields { grid-template-columns: 1fr; }
   .folder-actions .btn { padding: 0.45rem 0.55rem; }   /* objetivo táctil algo mayor */
   .folder-create { flex-basis: 100%; }
   .folder-create-form { max-width: none; }
-  .folder-rename { flex-wrap: wrap; }
-  .folder-rename input { flex-basis: calc(100% - 2.4rem); }
+}
+
+/* Táctil: acciones de carpeta, migas y avisos con objetivo de ~44 px */
+@media (pointer: coarse) {
+  .folder-view.is-manual { --actions-w: 6.2rem; }       /* dos botones de 2,75 rem + hueco + margen */
+  .folder-actions .btn { padding: 0.45rem 0.55rem; }
+  .view-toggle .btn { min-width: 2.75rem; }
+  .drive-crumbs a, .drive-crumbs [aria-current="page"] { padding: 0.75rem 0.5rem; }   /* ~44 px de alto; sigue siendo un bloque para conservar la elipsis */
+  .note-close { min-width: 2.75rem; min-height: 2.75rem; margin: -0.6rem -0.6rem -0.6rem auto; }
 }
 @media (max-width: 480px) {
   .folder-view[data-view="grid"] .folder-icon img { width: 3.75rem; height: 3.75rem; }

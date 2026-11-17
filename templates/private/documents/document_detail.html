@@ -4,6 +4,7 @@
 {% block title %}Ver documento - FacturIA{% endblock %}
 {% block styles %}
 {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/viewer.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/documents/document_detail.css' %}">
 {% endblock %}
 
@@ -13,7 +14,7 @@
     <!-- Cabecera: identidad del documento y acciones siempre visibles -->
     <header class="detail-head">
         <div class="detail-title">
-            <a class="btn btn-ghost btn-sm" href="{% url 'documents:list' %}" title="Volver al listado"><i class="fa-solid fa-arrow-left"></i></a>
+            <a class="btn btn-ghost btn-sm" href="{% url 'documents:list' %}" data-back title="Volver" aria-label="Volver"><i class="fa-solid fa-arrow-left"></i></a>
             <div class="detail-title-text">
                 <h1 title="{{ document.original_name }}">{{ document.original_name }}</h1>
                 <div class="detail-badges">
@@ -132,29 +133,12 @@
 
         <!-- Visor del documento (sticky en escritorio) -->
         <div class="pdf" data-file-url="{% url 'documents:file' document.pk %}" data-file-type="{% if document.is_pdf %}pdf{% else %}image{% endif %}">
-            {% if document.is_pdf %}
-            <div class="pdf-toolbar">
-                <button type="button" id="prev-page" aria-label="Página anterior"><i class="fa-solid fa-chevron-left"></i></button>
-                <span class="pdf-pages">Página <span id="page-num"></span> / <span id="page-count"></span></span>
-                <button type="button" id="next-page" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-                <span class="toolbar-sep"></span>
-                <button type="button" id="zoom-in" aria-label="Acercar"><i class="fa-solid fa-plus"></i></button>
-                <button type="button" id="zoom-out" aria-label="Alejar"><i class="fa-solid fa-minus"></i></button>
-                <button type="button" id="rotate-left" aria-label="Girar a la izquierda"><i class="fa-solid fa-rotate-left"></i></button>
-                <button type="button" id="rotate-right" aria-label="Girar a la derecha"><i class="fa-solid fa-rotate-right"></i></button>
-                <a class="toolbar-link" href="{% url 'documents:file' document.pk %}" target="_blank" rel="noopener" title="Abrir en una pestaña"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            </div>
-            <div id="pdf-viewer" class="viewer-scroll"></div>
-            <p id="pdf-fallback" style="display:none;">
-                No se puede visualizar el PDF.
-                <a href="{% url 'documents:file' document.pk %}" target="_blank">Descargar PDF</a>
-            </p>
-            {% elif document.is_image %}
-            <div id="image-container" class="viewer-scroll">
-                <img src="{% url 'documents:file' document.pk %}" alt="{{ document.original_name }}" style="max-width:100%; height:auto; transform:scale(1); transform-origin:center;" />
-            </div>
+            {% url 'documents:file' document.pk as download_url %}
+            {% if document.is_pdf or document.is_image %}
+            {% url 'documents:viewer' document.pk as fullscreen_url %}
+            {% include "components/_viewer.html" with is_pdf=document.is_pdf fullscreen_url=fullscreen_url download_url=download_url %}
             {% else %}
-            <p>No se puede visualizar el archivo</p>
+            <p class="viewer-fallback">No se puede visualizar el archivo. <a href="{{ download_url }}" download>Descargar</a></p>
             {% endif %}
         </div>
 

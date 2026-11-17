@@ -1,0 +1,31 @@
+{% comment %}
+  Barra de herramientas + superficie del visor (lo dibuja static/js/document-viewer.js).
+  Se incluye dentro de un contenedor [data-file-url][data-file-type].
+  Contexto: is_pdf (bool), download_url, fullscreen_url (opcional: enlace a la pantalla completa).
+{% endcomment %}
+<div class="viewer-toolbar" role="toolbar" aria-label="Herramientas del visor">
+    {% if is_pdf %}
+    <div class="viewer-group">
+        <button type="button" id="prev-page" aria-label="Página anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="pdf-pages"><span id="page-num">1</span> / <span id="page-count">–</span></span>
+        <button type="button" id="next-page" aria-label="Página siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    {% endif %}
+    <div class="viewer-group">
+        <button type="button" id="zoom-out" aria-label="Alejar"><i class="fa-solid fa-minus"></i></button>
+        <button type="button" id="zoom-in" aria-label="Acercar"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" id="reset-view" aria-label="Ajustar a la pantalla" title="Ajustar"><i class="fa-solid fa-compress"></i></button>
+    </div>
+    <div class="viewer-group">
+        <button type="button" id="rotate-left" aria-label="Girar a la izquierda" title="Girar a la izquierda"><i class="fa-solid fa-rotate-left"></i></button>
+        <button type="button" id="rotate-right" aria-label="Girar a la derecha" title="Girar a la derecha"><i class="fa-solid fa-rotate-right"></i></button>
+    </div>
+    {% if fullscreen_url %}
+    <a class="toolbar-link" href="{{ fullscreen_url }}" aria-label="Pantalla completa" title="Pantalla completa"><i class="fa-solid fa-expand"></i></a>
+    {% endif %}
+</div>
+<div class="viewer-surface" data-viewer-surface tabindex="0" aria-label="Documento"></div>
+<p id="pdf-fallback" class="viewer-fallback" hidden>
+    No se puede visualizar el archivo.
+    <a href="{{ download_url }}" download>Descargar</a>
+</p>

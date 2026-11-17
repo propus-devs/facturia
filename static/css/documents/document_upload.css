@@ -40,6 +40,11 @@
 .upload-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
 .camera-btn { display: none; }                       /* solo en móvil/táctil */
 @media (pointer: coarse) { .camera-btn { display: inline-flex; } }
+@media (max-width: 640px) {
+  .upload-card { padding: 1rem; border-radius: 14px; }
+  .dropzone { min-height: 180px; padding: 1.5rem 0.75rem; }
+  .upload-actions .btn { flex: 1 1 100%; }           /* acciones a todo el ancho: más fáciles de pulsar con el pulgar */
+}
 
 .upload-hint { font-size: 0.8rem; color: var(--muted-color); margin: 0.75rem 0 0; }
 
@@ -55,8 +60,9 @@
   font-size: 0.85rem;
 }
 .file-list li.invalid { border-color: var(--color-danger); color: var(--color-danger); }
-.file-list li > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.file-list li > span:first-child { flex: 1; min-width: 0; overflow-wrap: anywhere; }   /* filename.js lo recorta con «…» conservando la extensión */
 .file-list .size { color: var(--muted-color); white-space: nowrap; }
+@media (pointer: coarse) { .file-list li { padding-block: 0.15rem; } }
 .file-remove {
   flex-shrink: 0;
   width: 1.75rem; height: 1.75rem;
@@ -67,6 +73,7 @@
 }
 .file-remove:hover { color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 14%, transparent); }
 .file-remove:focus-visible { outline: 2px solid var(--enfasis-color); }
+@media (pointer: coarse) { .file-remove { width: 2.75rem; height: 2.75rem; font-size: 1rem; } }
 
 .form-error { color: var(--color-danger); font-size: 0.85rem; margin: 0 0 0.75rem; }
 .upload-queue { display: block; text-align: center; margin-top: 1rem; color: var(--enfasis-color); }

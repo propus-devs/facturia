@@ -45,7 +45,6 @@
 .cat-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .category-name { font-size: 0.98rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .category-movements { font-size: 0.78rem; color: var(--muted-color); }
-.category-card:hover 
 .empty-state {
   grid-column: 1 / -1; margin: 0; padding: 1.2rem; text-align: center; font-size: 0.9rem; color: var(--muted-color);
   border: 1px dashed var(--border-color-strong); border-radius: 12px;
@@ -55,3 +54,5 @@
   .category-grid { grid-template-columns: 1fr; }
     .cat-group-head .btn { padding-inline: 0.5rem; }
 }
+/* Táctil: el botón «+» de cada tarjeta con objetivo de 44 px */
+@media (pointer: coarse) { .cat-add { width: 2.75rem; height: 2.75rem; } }

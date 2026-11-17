@@ -117,7 +117,7 @@
                  aria-label="Incluir documento {{ doc.document_number }}" checked>
         </td>
         <td data-label="N.º documento">{{ doc.document_number|default:"—" }}</td>
-        <td class="name-cell cell-primary" data-label="Nombre"><a href="{% url 'documents:file' doc.pk %}">{{ doc.original_name }}</a></td>
+        <td class="name-cell cell-primary" data-label="Nombre"><a href="{% url 'documents:viewer' doc.pk %}">{{ doc.original_name }}</a></td>
         <td class="cell-sub" data-label="Proveedor">{{ doc.company.name|default:"—" }}</td>
         <td class="amount cell-highlight" data-label="Total (€)">{% if doc.total_amount is not None %}{{ doc.total_amount|spanish_currency }}{% else %}—{% endif %}</td>
         <td data-label="Fecha">{{ doc.issue_date|date:"d/m/Y"|default:"—" }}</td>
@@ -137,6 +137,7 @@
 
 {% block scripts %}
 {{ block.super }}
+<script src="{% static 'js/filename.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const formatSelect = document.getElementById("format");

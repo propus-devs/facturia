@@ -105,7 +105,7 @@
   background: var(--grad-surface);
   min-width: 0;
 }
-.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 0.75rem; margin-bottom: 1rem; }
 .panel-head h2 { margin: 0; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
 .panel-head h2 i { color: var(--enfasis-color); font-size: 0.9em; }
 .panel-note { font-size: 0.78rem; color: var(--muted-color); }
@@ -174,18 +174,30 @@
   content: ""; position: absolute; left: 15px; top: 34px; bottom: 2px; width: 2px;
   background: var(--border-color);
 }
+.timeline li > div { min-width: 0; overflow-wrap: anywhere; }   /* nombres de archivo largos no deben ensanchar el panel */
 .timeline p { margin: 0; font-size: 0.88rem; line-height: 1.35; }
 .timeline small { color: var(--muted-color); font-size: 0.75rem; }
 
 /* ---------- Tablas dentro de paneles ---------- */
 .table-wrapper.flat { border: none; background: transparent; border-radius: 0; }
 .table-wrapper.flat .table thead th { background: transparent; }
+/* En tarjetas el panel ya aporta el margen lateral */
+@container tablewrap (max-width: 760px) {
+  .table-wrapper.flat .table-cards tbody tr { padding-inline: 0; }
+}
 .table td.amount.pos { color: var(--color-success); font-weight: 600; }
 .table td.amount.neg { color: var(--color-danger); font-weight: 600; }
 
 @media (max-width: 640px) {
   .hero { padding: 1.1rem; }
-  .hero h1 { font-size: 1.4rem; }
+  .hero h1 { font-size: 1.4rem; overflow-wrap: anywhere; }
   .hero-actions, .hero-actions .btn { width: 100%; }
+  .panel { padding: 1rem; }
   .chart-box { height: 220px; }
+}
+
+/* Táctil: enlaces de la leyenda del embudo con objetivo cómodo */
+@media (pointer: coarse) {
+  .funnel-legend { gap: 0 1.25rem; }
+  .funnel-legend a { min-height: 2.75rem; }
 }

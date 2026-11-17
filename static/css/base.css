@@ -26,6 +26,9 @@ html, body {
   margin: 0px;
 }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* iOS no infla el texto al girar el móvil */
+a, button, input, select, textarea, label, summary { touch-action: manipulation; }   /* sin zoom por doble toque ni retardo */
+
 body {
   margin: 0;
   padding: 0;
@@ -45,7 +48,7 @@ h1, h2, h3, h4, h5, p {
 /* ---------- Layout con sidebar ---------- */
 :root { --sidebar-w: 232px; --sidebar-w-collapsed: 68px; }
 
-.app-shell { display: flex; min-height: 100vh; }
+.app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
 .app-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 .sidebar {
@@ -178,7 +181,8 @@ h1, h2, h3, h4, h5, p {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+    /* env(): zona segura (notch/isla) cuando la página usa viewport-fit=cover; 0 en caso contrario */
+    padding: calc(0.5rem + env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) 0.5rem max(0.75rem, env(safe-area-inset-left));
     background: var(--body-bg-color);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
@@ -191,11 +195,17 @@ h1, h2, h3, h4, h5, p {
     position: fixed;
     inset: 0 auto 0 0;
     width: min(80vw, 280px);
+    padding-top: calc(0.9rem + env(safe-area-inset-top));
+    padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
+    padding-left: calc(0.65rem + env(safe-area-inset-left));
     transform: translateX(-100%);
     transition: transform 0.25s ease;
+    z-index: 60;                       /* por encima de las barras fijas de las páginas (p. ej. acciones del detalle) */
   }
   .sidebar-open .sidebar { transform: translateX(0); }
-  .sidebar-open .sidebar-overlay { display: block; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.6); z-index: 35; }
+  .sidebar-open .sidebar-overlay { display: block; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.6); z-index: 55; }
+  body:has(.sidebar-open) { overflow: hidden; }   /* el fondo no se desplaza con el panel abierto */
+  .sidebar-nav { overscroll-behavior: contain; }
   .sidebar-collapse { display: none; }
 
   /* En móvil el estado "contraído" no aplica */
@@ -212,6 +222,15 @@ h1, h2, h3, h4, h5, p {
   margin: 0 auto;
   box-sizing: border-box;
   flex: 1;
+}
+@media (max-width: 640px) {
+  .app-main { padding: 1.25rem max(1rem, env(safe-area-inset-right)) 1.5rem max(1rem, env(safe-area-inset-left)); }
+}
+
+/* Táctil: objetivos de al menos 44 px en la navegación */
+@media (pointer: coarse) {
+  .sidebar-nav a, .sidebar-user, .sidebar-logout { min-height: 2.75rem; box-sizing: border-box; }
+  .topbar .btn { min-width: 2.75rem; min-height: 2.75rem; }
 }
 
 .messages {
@@ -242,9 +261,11 @@ h1, h2, h3, h4, h5, p {
   justify-content: center;
   align-items: center;
   min-height: 70vh;
+  min-height: 70dvh;
 }
 
 .error-card {
+  box-sizing: border-box;
   text-align: center;
   padding: 3rem;
   background: var(--card-bg-color);
@@ -252,6 +273,7 @@ h1, h2, h3, h4, h5, p {
   box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   max-width: 500px;
 }
+@media (max-width: 480px) { .error-card { padding: 2rem 1.25rem; } }
 
 .error-code {
   font-size: 5rem;
@@ -259,6 +281,7 @@ h1, h2, h3, h4, h5, p {
   margin-bottom: 1rem;
   color: var(--enfasis-color);
 }
+@media (max-width: 480px) { .error-code { font-size: 4rem; } }
 
 .error-actions {
   margin-top: 1.5rem;

@@ -7,7 +7,14 @@
 }
 
 /* Visor documento */
+/* Barra, superficie, zoom y giro: static/css/viewer.css */
 .pdf {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  height: calc(100vh - 2rem);
+  height: calc(100dvh - 2rem);
+  min-height: 420px;
   background: #020617;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -19,13 +26,6 @@
   height: 100%;
   min-height: 70vh;
   border: none;
-}
-
-.pdf img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
 }
 
 .pdf > h3 {
@@ -163,68 +163,12 @@ select.editable-field {
   .pdf iframe {
     min-height: 60vh;
   }
-}
 
-/* Toolbar general */
-.pdf-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #0f172a;
-  padding: 0.5rem 0.75rem;
-  border-radius: 12px;
-  margin-bottom: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-/* Botones de toolbar */
-.pdf-toolbar button {
-  background: #1e293b; /* gris oscuro suave */
-  color: #f8fafc;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 0.35rem 0.6rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s, transform 0.05s;
-}
-
-.pdf-toolbar button:hover {
-  background: #334155; /* más claro al hover */
-  transform: scale(1.05);
-}
-
-/* Zoom buttons un poco más destacados */
-.pdf-toolbar #zoom-in, .pdf-toolbar #zoom-out {
-  background: var(--color-info);
-  color: #020617;
-  color: #f8fafc;
-  border: none;
-}
-
-.pdf-toolbar #zoom-in:hover, .pdf-toolbar #zoom-out:hover {
-  background: #2563eb;
-}
-
-/* Texto de página */
-.pdf-toolbar span {
-  margin: 0 0.25rem;
-  font-weight: 500;
-  color: #cbd5f5;
-}
-
-/* Responsive: en móvil los botones más pequeños */
-@media (max-width: 768px) {
-  .pdf-toolbar {
-    font-size: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .pdf-toolbar button {
-    padding: 0.25rem 0.5rem;
+  .pdf {
+    position: relative;
+    top: auto;
+    height: 65vh;
+    height: 65dvh;
   }
 }
 
@@ -606,3 +550,14 @@ select.editable-field {
   font-size: 0.85rem;
 }
 .next-pending:hover { text-decoration: underline; }
+
+/* Móvil: 16px en el motivo del modal evita el zoom de iOS (el resto de campos lo hereda de ui.css);
+   y el modal no puede ser más ancho que la pantalla (90% + padding en content-box). */
+@media (max-width: 768px) {
+  #modal-reason { font-size: 1rem; }
+}
+@media (max-width: 640px) {
+  .modal-content { box-sizing: border-box; width: calc(100% - 2rem); max-width: 420px; max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.25rem; }
+  .modal-content > .btn { display: flex; width: 100%; }
+  .modal-content > .btn + .btn { margin-top: 0.5rem; }
+}

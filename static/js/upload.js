@@ -49,6 +49,7 @@
             if (tooBig) { li.className = "invalid"; ok = false; }
             const name = document.createElement("span");
             name.textContent = f.name;
+            if (window.fitFilename) window.fitFilename(name);   // recorta con «…» conservando la extensión
             const size = document.createElement("span");
             size.className = "size";
             size.textContent = tooBig ? "demasiado grande (" + fmt(f.size) + ")" : fmt(f.size);

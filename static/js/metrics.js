@@ -69,11 +69,28 @@
         const values = d.status.map((s) => s.value);
         const total = values.reduce((a, b) => a + b, 0);
         const show = (i) => {
-            center.innerHTML = i == null
-                ? "<strong>" + K.int.format(total) + "</strong><small>documentos</small>"
-                : "<strong>" + K.int.format(values[i]) + "</strong><small>" + d.status[i].label + "</small>";
+            const num = document.createElement("strong");
+            const label = document.createElement("small");
+            num.textContent = K.int.format(i == null ? total : values[i]);
+            label.textContent = i == null ? "documentos" : d.status[i].label;
+            center.replaceChildren(num, label);
         };
         show(null);
+
+        // Leyenda propia (la de Chart.js cambiaba de altura al partirse en filas y descentraba el total)
+        const legend = document.getElementById("donutLegend");
+        d.status.forEach((s, i) => {
+            const li = document.createElement("li");
+            li.style.setProperty("--dot", K.tone(s.tone));
+            if (!values[i]) li.classList.add("is-zero");
+            const dot = document.createElement("i");
+            const count = document.createElement("b");
+            count.textContent = K.int.format(values[i]);
+            li.append(dot, s.label + " ", count);
+            li.addEventListener("mouseenter", () => show(i));
+            li.addEventListener("mouseleave", () => show(null));
+            legend.appendChild(li);
+        });
         new Chart(dc.getContext("2d"), {
             type: "doughnut",
             data: {
@@ -84,7 +101,7 @@
                 responsive: true, maintainAspectRatio: false, cutout: "72%",
                 animation: K.reduce ? false : { duration: 1000, easing: "easeOutCubic" },
                 plugins: {
-                    legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8, padding: 14 } },
+                    legend: { display: false },
                     tooltip: K.tooltip({ callbacks: { label: (c) => " " + c.label + ": " + c.parsed + " (" + Math.round(c.parsed / total * 100) + " %)" } }),
                 },
                 onHover: (evt, els) => show(els.length ? els[0].index : null),
