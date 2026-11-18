@@ -561,3 +561,14 @@ select.editable-field {
   .modal-content > .btn { display: flex; width: 100%; }
   .modal-content > .btn + .btn { margin-top: 0.5rem; }
 }
+
+/* ---------- Responsive (móvil / tablet): formulario de datos ---------- */
+.data, .pdf { min-width: 0; }
+.data-form .actions { flex-wrap: wrap; }
+.data-form .actions .btn { flex: 1 1 auto; }
+@media (max-width: 640px) {
+  .data { padding: 1rem; }
+  .pdf-header { flex-wrap: wrap; gap: 0.4rem; }
+  .pdf-header h3 { min-width: 0; overflow-wrap: anywhere; }
+  #review-form input, select.editable-field { font-size: 1rem; min-height: 44px; }
+}
