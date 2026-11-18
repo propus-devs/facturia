@@ -52,6 +52,7 @@ ICONS = {
     "metrics": "fa-solid fa-chart-line",
     "profile": "fa-solid fa-user",
     "clients": "fa-solid fa-building",
+    "admin": "fa-solid fa-user-shield",
     "menu": "fa-solid fa-bars",
     "collapse": "fa-solid fa-angles-left",
     "logout": "fa-solid fa-right-from-bracket",
@@ -99,6 +100,20 @@ def badge(kind, value, label=None):
     return format_html(
         '<span class="badge-status tone-{}" data-{}="{}"><i class="{}" aria-hidden="true"></i><span>{}</span></span>',
         tone, kind, value, icon_cls, label or default_label,
+    )
+
+
+@register.simple_tag
+def badge_compact(kind, value, label=None):
+    """Badge de solo icono (mismo tono e icono que `badge`); el texto va en title/aria-label."""
+    spec = BADGES.get(kind, {}).get(value)
+    if spec is None:
+        return ""
+    icon_cls, tone, default_label = spec
+    text = label or default_label
+    return format_html(
+        '<span class="badge-status badge-icon tone-{}" data-{}="{}" role="img" title="{}" aria-label="{}"><i class="{}" aria-hidden="true"></i></span>',
+        tone, kind, value, text, text, icon_cls,
     )
 
 

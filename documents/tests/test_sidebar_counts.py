@@ -25,10 +25,12 @@ def test_no_badge_when_nothing_pending(auth_client):
 
 
 def test_admin_link_only_for_superuser(auth_client, user):
-    assert "Uso por cliente" not in auth_client.get(reverse("dashboard")).content.decode()
+    body = auth_client.get(reverse("dashboard")).content.decode()
+    assert "Uso por cliente" not in body and reverse("admin:index") not in body
     user.is_superuser = True
     user.save()
-    assert "Uso por cliente" in auth_client.get(reverse("dashboard")).content.decode()
+    body = auth_client.get(reverse("dashboard")).content.decode()
+    assert "Uso por cliente" in body and f'href="{reverse("admin:index")}"' in body
 
 
 def test_login_page_has_no_counts(client):

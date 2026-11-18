@@ -111,3 +111,6 @@
 .recent-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.86rem; color: var(--body-fg-color); text-decoration: none; }
 .recent-name:hover { color: var(--enfasis-color); }
 .muted-note { margin: 0; font-size: 0.86rem; color: var(--muted-color); }
+
+/* Móvil/tablet (una columna): los últimos documentos van antes que «Cómo funciona» y «Requisitos». */
+@media (max-width: 1099px) { .recent-panel { order: -1; } }

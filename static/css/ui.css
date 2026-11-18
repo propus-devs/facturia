@@ -310,3 +310,7 @@ a.link:hover { text-decoration: underline; }
   .table-cards td.empty { grid-column: 1 / -1; }
   .table-cards tr:has(td.empty) { display: block; }
 }
+
+/* Estado de solo icono: sin fondo ni borde, solo el icono con el color del tono */
+.badge-status.badge-icon { justify-content: center; padding: 0; background: none; border: 0; border-radius: 0; }
+.badge-status.badge-icon i { font-size: 1rem; }

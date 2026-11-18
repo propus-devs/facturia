@@ -19,13 +19,13 @@
                 <h1 title="{{ document.original_name }}">{{ document.original_name }}</h1>
                 <div class="detail-badges">
                     {% if document.parent_document %}
-                        <span class="badge rectified">Rectificación v{{ document.version }}{% if document.is_current %} (actual){% endif %}</span>
+                        <span class="badge rectified" title="Rectificación v{{ document.version }}{% if document.is_current %} (actual){% endif %}">v{{ document.version }}</span>
                     {% else %}
-                        <span class="badge original">Original{% if document.is_current %} (actual){% else %} (v{{ document.version }}){% endif %}</span>
+                        <span class="badge original" title="Original{% if document.is_current %} (actual){% else %} (v{{ document.version }}){% endif %}">v{{ document.version }}</span>
                     {% endif %}
                     <span class="badge type">{{ document.get_document_type_display }}</span>
-                    {% badge "status" document.status %}
-                    {% if document.is_archived %}{% badge "status" "archived" %}{% endif %}
+                    {% badge_compact "status" document.status %}
+                    {% if document.is_archived %}{% badge_compact "status" "archived" %}{% endif %}
                 </div>
             </div>
         </div>
