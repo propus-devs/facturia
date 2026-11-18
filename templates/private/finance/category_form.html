@@ -6,7 +6,7 @@
 {% endblock %}
 {% block content %}
 <div class="form-head">
-  <a href="{% url 'finance:categories' %}" class="btn btn-back btn-sm">{% icon "back" %} Volver</a>
+  <a href="{% if object %}{% url 'finance:category_detail' object.pk %}{% else %}{% url 'finance:categories' %}{% endif %}" class="btn btn-back btn-sm">{% icon "back" %} Volver</a>
   <h1 class="form-page-title"><i class="fa-solid fa-tags"></i> {% if object %}Editar categoría{% else %}Nueva categoría{% endif %}</h1>
   <p class="form-subtitle">Las categorías clasifican tus movimientos y aparecen en los resúmenes de gastos e ingresos.</p>
 </div>
@@ -50,7 +50,7 @@
 
     <div class="form-actions-bar">
       <button type="submit" class="btn btn-primary">{% icon "save" %} Guardar</button>
-      <a href="{% url 'finance:categories' %}" class="btn btn-ghost">Cancelar</a>
+      <a href="{% if object %}{% url 'finance:category_detail' object.pk %}{% else %}{% url 'finance:categories' %}{% endif %}" class="btn btn-ghost">Cancelar</a>
       {% if object %}<a href="{% url 'finance:delete_category' object.pk %}" class="btn btn-danger spacer">{% icon "delete" %} Borrar</a>{% endif %}
     </div>
   </div>

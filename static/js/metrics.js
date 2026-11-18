@@ -3,6 +3,19 @@
     const K = window.ChartKit;
     K.countUp();
 
+    // --- Botón «Ver»: solo activo cuando las fechas difieren de las cargadas ---
+    document.querySelectorAll("form.range").forEach(function (form) {
+        const btn = form.querySelector('button[type="submit"]');
+        const inputs = form.querySelectorAll('input[type="date"]');
+        if (!btn) return;
+        const initial = Array.from(inputs, (i) => i.value);
+        const sync = function () {
+            btn.disabled = Array.from(inputs).every((i, n) => i.value === initial[n]);
+        };
+        inputs.forEach((i) => i.addEventListener("input", sync));
+        sync();
+    });
+
     // --- Pestañas del desglose por origen ---
     document.querySelectorAll("[data-tabs]").forEach(function (box) {
         const tabs = box.querySelectorAll("[data-tab]");

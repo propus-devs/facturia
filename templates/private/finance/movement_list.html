@@ -8,17 +8,23 @@
 
 {% block content %}
 <h1 class="page-title">{% icon "finance" %} Tus movimientos
-  <span class="page-actions">
-    <a href="{% url 'finance:new_movement' %}" class="btn btn-primary">{% icon "new" %} Nuevo movimiento</a>
+  <span class="page-actions page-actions-compact">
+    <a href="{% url 'finance:new_movement' %}" class="btn btn-primary" aria-label="Nuevo movimiento">{% icon "new" %}<span class="btn-label"> Nuevo movimiento</span></a>
   </span>
 </h1>
+
+<div class="summary-strip">
+  <div class="summary-chip tone-success"><span>Ingresos{% if active_filters %} (filtrados){% endif %}</span><strong>{{ totals.income|spanish_currency }} €</strong></div>
+  <div class="summary-chip tone-danger"><span>Gastos{% if active_filters %} (filtrados){% endif %}</span><strong>{{ totals.expense|spanish_currency }} €</strong></div>
+  <div class="summary-chip {% if totals.balance >= 0 %}tone-success{% else %}tone-danger{% endif %}"><span>Balance</span><strong>{{ totals.balance|spanish_currency }} €</strong></div>
+</div>
 
 <form method="get" class="filter-card" id="filter-form">
   <div class="filter-top">
     <div class="search-group">
       <div class="search-field">
         {% icon "search" %}
-        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar por concepto o categoría" aria-label="Buscar por concepto o categoría">
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Concepto o categoría" aria-label="Buscar por concepto o categoría">
       </div>
       <button type="submit" class="btn btn-primary">Buscar</button>
     </div>
@@ -78,12 +84,6 @@
   </div>
   {% endif %}
 </form>
-
-<div class="summary-strip">
-  <div class="summary-chip tone-success"><span>Ingresos{% if active_filters %} (filtrados){% endif %}</span><strong>{{ totals.income|spanish_currency }} €</strong></div>
-  <div class="summary-chip tone-danger"><span>Gastos{% if active_filters %} (filtrados){% endif %}</span><strong>{{ totals.expense|spanish_currency }} €</strong></div>
-  <div class="summary-chip {% if totals.balance >= 0 %}tone-success{% else %}tone-danger{% endif %}"><span>Balance</span><strong>{{ totals.balance|spanish_currency }} €</strong></div>
-</div>
 
 <div class="results-bar">
   <div class="results-count">

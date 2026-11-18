@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load ui static custom_filters %}
+{% block title %}{{ category.name }} - FacturIA{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'css/list-page.css' %}">
+    <link rel="stylesheet" href="{% static 'css/finance/movement_list.css' %}">
+    <link rel="stylesheet" href="{% static 'css/finance/category_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'finance:categories' %}" class="btn btn-back btn-sm">{% icon "back" %} Volver a categorías</a>
+<h1 class="page-title"><i class="{{ category.icon|default:'fa-solid fa-tag' }}" style="color: {{ category.color|default:'#64748b' }}"></i> {{ category.name }}
+  <span class="page-actions page-actions-compact">
+    <a href="{% url 'finance:edit_category' category.pk %}" class="btn" title="Editar categoría" aria-label="Editar categoría">{% icon "edit" %}</a>
+    <a href="{% url 'finance:new_movement' %}?category={{ category.pk }}" class="btn btn-primary" title="Nuevo movimiento" aria-label="Nuevo movimiento">{% icon "new" %}</a>
+  </span>
+</h1>
+
+<div class="summary-strip">
+  <div class="summary-chip {% if category.type == 'income' %}tone-success{% else %}tone-danger{% endif %}"><span>Total{% if active_filters %} (filtrado){% endif %}</span><strong>{{ total|spanish_currency }} €</strong></div>
+  <div class="summary-chip"><span>Movimientos</span><strong>{{ count }}</strong></div>
+  <div class="summary-chip"><span>Importe medio</span><strong>{{ average|spanish_currency }} €</strong></div>
+  <div class="summary-chip"><span>Puesto en {{ category.get_type_display|lower }}</span><strong>{{ ranking.position }}º de {{ ranking.of }}</strong><small>{{ ranking.share }} % del total histórico</small></div>
+</div>
+
+<form method="get" class="filter-card">
+  <div class="cat-filters">
+    <div class="search-group">
+      <div class="search-field">
+        {% icon "search" %}
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Concepto" aria-label="Buscar por concepto">
+      </div>
+    </div>
+    <div class="field"><label for="f-method">Método</label>
+      <select name="method" id="f-method"><option value="">Todos</option>
+        {% for id, name in payment_methods %}<option value="{{ id }}" {% if request.GET.method == id %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select></div>
+    <div class="field"><label for="f-start">Desde</label><input type="date" name="start" id="f-start" value="{{ request.GET.start }}"></div>
+    <div class="field"><label for="f-end">Hasta</label><input type="date" name="end" id="f-end" value="{{ request.GET.end }}"></div>
+    <button type="submit" class="btn btn-primary btn-sm cat-apply">{% icon "filter" %} Aplicar</button>
+  </div>
+  {% if active_filters %}
+  <div class="active-filters" aria-label="Filtros aplicados">
+    <span class="active-filters-label">Filtros:</span>
+    {% for f in active_filters %}
+    <a class="filter-chip" href="{{ f.remove_url }}" title="Quitar este filtro"><small>{{ f.label }}:</small> <span>{{ f.text }}</span> <i class="x fa-solid fa-xmark"></i></a>
+    {% endfor %}
+    <a class="btn btn-ghost btn-sm" href="{% url 'finance:category_detail' category.pk %}">Limpiar todo</a>
+  </div>
+  {% endif %}
+</form>
+
+<div class="results-bar">
+  <div class="results-count">
+    {% if page_obj.paginator.count %}<strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong> de <strong>{{ page_obj.paginator.count }}</strong> movimientos{% else %}Sin resultados{% endif %}
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table class="table table-cards movements-table">
+    <thead>
+      <tr><th>Fecha</th><th>Concepto</th><th>Método</th><th>Estado</th><th class="num">Importe</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for movement in movements %}
+      <tr class="movement-row {{ movement.movement_type }}">
+        <td class="date" data-label="Fecha">{{ movement.date|pretty_date }}</td>
+        <td class="description cell-primary" data-label="Concepto">{{ movement.description|default:"—" }}</td>
+        <td class="payment-method" data-label="Método">
+          {% if movement.payment_method %}<span class="badge-method"><i class="fa-solid {{ movement.payment_icon }}"></i> {{ movement.get_payment_method_display }}</span>{% else %}—{% endif %}
+        </td>
+        <td data-label="Estado">{% if movement.is_reconciled %}{% badge "reconcile" "reconciled" %}{% else %}{% badge "reconcile" "pending" %}{% endif %}</td>
+        <td class="amount cell-highlight {% if movement.movement_type == 'income' %}income{% else %}expense{% endif %}" data-label="Importe">
+          {% if movement.movement_type == 'income' %}+{% else %}−{% endif %}{{ movement.amount|spanish_currency }} €
+        </td>
+        <td class="col-actions cell-actions"><a href="{% url 'finance:edit_movement' movement.id %}" class="btn btn-ghost btn-sm" aria-label="Editar movimiento">{% icon "edit" %}<span class="only-cards"> Editar</span></a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="empty">
+        <i class="fa-regular fa-folder-open"></i>
+        {% if active_filters %}Ningún movimiento coincide con los filtros. <a class="link" href="{% url 'finance:category_detail' category.pk %}">Limpiar filtros</a>{% else %}Esta categoría aún no tiene movimientos. <a class="link" href="{% url 'finance:new_movement' %}?category={{ category.pk }}">Crea el primero</a>.{% endif %}
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+  <div class="table-footer-bar">
+    <span class="results-count">Página <strong>{{ page_obj.number }}</strong> de {{ page_obj.paginator.num_pages }}</span>
+    <nav class="pager" aria-label="Paginación">
+      {% if page_obj.has_previous %}<a href="?{{ querystring }}&page={{ page_obj.previous_page_number }}" aria-label="Anterior">&lsaquo;</a>{% else %}<span class="page disabled">&lsaquo;</span>{% endif %}
+      {% for n in page_numbers %}{% if n == "…" %}<span class="page gap num">…</span>{% elif n == page_obj.number %}<span class="page current num" aria-current="page">{{ n }}</span>{% else %}<a class="num" href="?{{ querystring }}&page={{ n }}">{{ n }}</a>{% endif %}{% endfor %}
+      {% if page_obj.has_next %}<a href="?{{ querystring }}&page={{ page_obj.next_page_number }}" aria-label="Siguiente">&rsaquo;</a>{% else %}<span class="page disabled">&rsaquo;</span>{% endif %}
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

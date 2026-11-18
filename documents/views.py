@@ -17,6 +17,7 @@ from .selectors import drive_selector as drive
 from .selectors.document_selector import DocumentSelector
 from .services import DocumentService
 from .services.dashboard_service import DashboardService
+from .services.usage import usage_by_client
 from .services.metrics_page import build_page, presets, previous_period
 from datetime import date
 from django.contrib.auth import get_user_model
@@ -514,6 +515,9 @@ class MetricsDashboardView(LoginRequiredMixin, TemplateView):
 
         # Presentación: héroe, desglose por origen, IVA, embudo, automatización, gráficos
         start, end = metrics["period"]["start"], metrics["period"]["end"]
+        # Uso por cliente: datos de todos los tenants, solo para superusuarios.
+        if self.request.user.is_superuser:
+            context["client_usage"] = usage_by_client(start, end)
         previous = None
         if isinstance(start, date) and isinstance(end, date):
             p_start, p_end = previous_period(start, end)

@@ -97,11 +97,20 @@ a.link:hover { text-decoration: underline; }
   color: var(--body-fg-color);
   font: inherit;
   font-size: 0.9rem;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 :where(.app-main) :is(select, textarea, input):focus {
   outline: none;
   border-color: var(--enfasis-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--enfasis-color) 22%, transparent);
+}
+/* 16px mínimo en móvil: evita el zoom automático de iOS al enfocar; altura táctil cómoda */
+@media (max-width: 640px) {
+  :where(.app-main) :is(select, textarea, input:not([type="checkbox"], [type="radio"], [type="file"], [type="hidden"], [type="submit"], [type="color"], [type="range"])) {
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  :where(.app-main) textarea { min-height: 6rem; }
 }
 /* iOS hace zoom al enfocar un control con texto < 16px: en móvil y tablet pequeña se fuerza 16px */
 @media (max-width: 768px) {
@@ -116,9 +125,9 @@ a.link:hover { text-decoration: underline; }
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.18rem 0.6rem;
+  padding: 0.18rem 0.55rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
@@ -189,7 +198,7 @@ a.link:hover { text-decoration: underline; }
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--muted-color);
-  background: color-mix(in srgb, var(--body-bg-color) 55%, var(--card-bg-color));
+  background: transparent;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -204,6 +213,7 @@ a.link:hover { text-decoration: underline; }
 .table tbody tr { transition: background 0.15s; }
 .table tbody tr:hover { background: var(--surface-hover); }
 .table .clickable-row { cursor: pointer; }
+.table a:focus-visible { outline-offset: 1px; border-radius: 4px; }
 
 .table .num, .table td.amount { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table .col-actions { text-align: right; white-space: nowrap; width: 1%; }
@@ -220,6 +230,7 @@ a.link:hover { text-decoration: underline; }
 @media (max-width: 640px) {
   .hide-sm { display: none; }
   .table thead th, .table td { padding: 0.6rem 0.65rem; }
+  .table td { font-size: 0.875rem; }
 }
 
 /* Enlaces que envuelven una tarjeta/KPI entero: sin color ni subrayado de enlace */
@@ -235,13 +246,13 @@ a.link:hover { text-decoration: underline; }
   padding: 1.5rem;
   border: 1px solid var(--border-color-strong);
   border-radius: 14px;
-  background: var(--grad-surface);
+  background: var(--card-bg-color);
   color: var(--body-fg-color);
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
 }
-.dialog::backdrop { background: rgba(2, 6, 23, 0.65); backdrop-filter: blur(2px); }
-.dialog h3 { margin: 0.75rem 0 0.35rem; font-size: 1.05rem; }
+.dialog::backdrop { background: rgba(2, 6, 23, 0.7); }
+.dialog h3 { margin: 0.75rem 0 0.35rem; font-size: 1.05rem; overflow-wrap: anywhere; }
 .dialog p { margin: 0 0 1.25rem; color: var(--muted-color); font-size: 0.9rem; }
 .dialog p strong { color: var(--body-fg-color); }
 .dialog-icon {
@@ -274,7 +285,7 @@ a.link:hover { text-decoration: underline; }
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.55rem 1rem;
-    padding: 0.9rem 1rem;
+    padding: 0.8rem 0.9rem;
     border-top: 1px solid var(--border-color);
   }
   .table-cards tbody tr:first-child { border-top: none; }
@@ -293,8 +304,9 @@ a.link:hover { text-decoration: underline; }
   .table-cards .cell-primary { grid-column: 1 / -1; order: -4; font-weight: 600; font-size: 0.98rem; }
   .table-cards .cell-primary::before, .table-cards .cell-sub::before, .table-cards .cell-highlight::before, .table-cards .cell-actions::before { display: none; }
   .table-cards .cell-sub { grid-column: 1 / -1; order: -3; color: var(--muted-color); font-size: 0.85rem; }
-  .table-cards .cell-highlight { grid-column: 1 / -1; order: -2; font-size: 1.15rem; font-weight: 700; }
-  .table-cards .cell-actions { grid-column: 1 / -1; order: 99; flex-direction: row; justify-content: flex-end; }
+  .table-cards .cell-highlight { grid-column: 1 / -1; order: -2; font-size: 1.05rem; font-weight: 700; }
+  .table-cards .cell-actions { grid-column: 1 / -1; order: 99; flex-direction: row; flex-wrap: wrap; justify-content: flex-end; gap: 0.4rem; }
+  .table-cards td { overflow-wrap: anywhere; }
   .table-cards td.empty { grid-column: 1 / -1; }
   .table-cards tr:has(td.empty) { display: block; }
 }

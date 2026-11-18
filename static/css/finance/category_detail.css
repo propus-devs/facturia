@@ -1,0 +1,13 @@
+/* Detalle de categoría: filtros compactos en una sola fila y tarjetas de resumen. */
+.cat-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.7rem; }
+.cat-filters .search-group { flex: 0 1 280px; align-self: flex-end; }
+.cat-filters .field { flex: 0 1 150px; min-width: 0; }
+.cat-filters .cat-apply { flex: 0 0 auto; }
+.summary-chip small { font-size: 0.72rem; color: var(--muted-color); }
+@media (max-width: 640px) {
+  .cat-filters .search-group, .cat-filters .field { flex: 1 1 100%; }
+  .cat-filters .cat-apply { flex: 1 1 100%; }
+}
+/* Sin botón junto al buscador: el input recupera todas sus esquinas redondeadas. */
+.cat-filters .search-group .search-field input { border: 1px solid var(--border-color); border-radius: 10px; }
+.cat-filters .search-group .search-field input:focus { border-color: var(--enfasis-color); }

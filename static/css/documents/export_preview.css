@@ -15,18 +15,19 @@
 /* ---------- Barra de formato y confirmación ---------- */
 .export-bar {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem 1rem;
-  margin-bottom: 1rem; padding: 0.85rem 1.1rem;
-  border: 1px solid var(--border-color); border-radius: 14px; background: var(--grad-surface);
+  margin-bottom: 1rem; padding: 0.8rem 1rem;
+  border: 1px solid var(--border-color); border-radius: 12px; background: var(--grad-surface);
 }
 .export-bar-format { display: flex; align-items: center; gap: 0.6rem; }
 .export-bar-format label { font-size: 0.82rem; color: var(--muted-color); }
 .export-bar-format select { min-width: 160px; cursor: pointer; }
 .export-bar-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.page-subtitle { margin-top: 0; }
 
 /* ---------- Vista previa del PDF ---------- */
 .pdf-preview-wrapper {
   margin-bottom: 1rem; overflow: hidden;
-  border: 1px solid var(--border-color); border-radius: 14px; background: var(--grad-surface);
+  border: 1px solid var(--border-color); border-radius: 12px; background: var(--grad-surface);
 }
 .pdf-preview-wrapper.is-hidden { display: none; }
 .pdf-preview-wrapper h2 {
@@ -40,6 +41,7 @@
 /* ---------- Tabla ---------- */
 .table .col-select { width: 2.5rem; text-align: center; }
 .table input[type="checkbox"] { width: 1.05rem; height: 1.05rem; accent-color: var(--enfasis-color); cursor: pointer; }
+@media (pointer: coarse) { .table input[type="checkbox"] { width: 1.3rem; height: 1.3rem; } }
 
 @media (max-width: 768px) {
   .export-bar-format { flex: 1 1 100%; }

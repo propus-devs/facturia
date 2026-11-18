@@ -9,11 +9,9 @@
 
 {% block content %}
 
+<a href="{% url 'dashboard' %}" class="btn btn-back btn-sm">{% icon "back" %} Volver</a>
 <div class="page-header">
   <h1><i class="fa-solid fa-user"></i> Cuenta</h1>
-  <a href="{% url 'dashboard' %}" class="btn btn-back">
-    <i class="fa-solid fa-arrow-left"></i> Volver
-  </a>
 </div>
 
 <nav class="account-tabs" aria-label="Secciones de la cuenta">

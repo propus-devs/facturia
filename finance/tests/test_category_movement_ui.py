@@ -147,3 +147,38 @@ class TestSelectPlaceholder:
         body = auth_client.get(reverse("finance:new_movement")).content.decode()
         assert "Selecciona una opción" in body and "Select an option" not in body
         assert DocumentRectificationForm().fields["company"].empty_label == "Selecciona una opción"
+
+
+class TestCategoryDetail:
+    def url(self, c):
+        return reverse("finance:category_detail", kwargs={"pk": c.pk})
+
+    def test_lists_only_own_category_movements_with_edit_button(self, auth_client, user):
+        c = user.client
+        a, b = cat(c, "Marketing"), cat(c, "Alquiler")
+        mov(c, a, "10"); mov(c, a, "5"); mov(c, b, "99")
+        r = auth_client.get(self.url(a))
+        assert len(r.context["movements"]) == 2 and r.context["total"] == D("15")
+        assert len(auth_client.get(self.url(a) + f"?category={b.pk}").context["movements"]) == 0
+        assert reverse("finance:edit_category", kwargs={"pk": a.pk}) in r.content.decode()
+
+    def test_filters_and_empty(self, auth_client, user):
+        a = cat(user.client, "Marketing")
+        mov(user.client, a)
+        assert len(auth_client.get(self.url(a) + "?start=2026-04-01").context["movements"]) == 0
+        assert auth_client.get(self.url(a) + "?q=zzz").status_code == 200
+
+    def test_other_tenant_404(self, auth_client, other_user):
+        assert auth_client.get(self.url(cat(other_user.client, "Secreta"))).status_code == 404
+
+    def test_list_links_to_detail(self, auth_client, user):
+        a = cat(user.client, "Marketing")
+        assert self.url(a) in auth_client.get(reverse("finance:categories")).content.decode()
+
+    def test_summary_stats_and_ranking(self, auth_client, user):
+        c = user.client
+        a, b = cat(c, "Marketing"), cat(c, "Alquiler")
+        mov(c, a, "10"); mov(c, a, "30"); mov(c, b, "60")
+        r = auth_client.get(self.url(a))
+        assert r.context["count"] == 2 and r.context["average"] == D("20")
+        assert r.context["ranking"] == {"position": 2, "of": 2, "share": 40}

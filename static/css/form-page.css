@@ -3,9 +3,9 @@
    ========================================================================== */
 .form-head { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.1rem; }
 .form-head .btn-back { align-self: flex-start; margin: 0; }
-.form-page-title { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.01em; }
+.form-page-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; min-width: 0; margin: 0; font-size: clamp(1.1rem, 1rem + 0.8vw, 1.3rem); font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; overflow-wrap: anywhere; }
 .form-page-title > i:first-child, .form-page-title > .title-icon {
-  display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; font-size: 0.95rem;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 10px; font-size: 0.9rem;
   color: var(--enfasis-color); background: color-mix(in srgb, var(--enfasis-color) 14%, transparent);
 }
 .form-subtitle { margin: 0; color: var(--muted-color); font-size: 0.9rem; }
@@ -15,8 +15,8 @@
 @media (max-width: 960px) { .form-layout { grid-template-columns: 1fr; } }
 
 .form-card {
-  display: flex; flex-direction: column; gap: 1.3rem; padding: 1.4rem;
-  border: 1px solid var(--border-color); border-radius: 14px; background: var(--grad-surface);
+  display: flex; flex-direction: column; gap: 1.2rem; padding: 1.25rem;
+  border: 1px solid var(--border-color); border-radius: 12px; background: var(--grad-surface);
 }
 .form-section { margin: 0; padding: 0; border: 0; display: grid; gap: 0.9rem; min-width: 0; }
 .form-section > legend {
@@ -26,7 +26,7 @@
 }
 .form-section > legend i { color: var(--enfasis-color); }
 .form-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
-@media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } .form-card { padding: 1rem; } }
+@media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } .form-card { padding: 1rem; gap: 1rem; } .form-head { gap: 0.4rem; } }
 
 .fld { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
 .fld > label, .fld > .fld-label { font-size: 0.82rem; font-weight: 500; color: var(--muted-color); }
@@ -62,8 +62,8 @@
 .seg-radio label { position: relative; }
 .seg-radio input { position: absolute; opacity: 0; pointer-events: none; }
 .seg-radio span {
-  display: flex; align-items: center; justify-content: center; gap: 0.45rem; padding: 0.55rem 0.7rem; border-radius: 10px; cursor: pointer;
-  border: 1px solid var(--border-color); color: var(--muted-color); font-size: 0.86rem; font-weight: 500; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 0.45rem; min-height: 2.5rem; box-sizing: border-box; padding: 0.55rem 0.7rem; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border-color); color: var(--muted-color); font-size: 0.86rem; font-weight: 500; transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .seg-radio span:hover { color: var(--body-fg-color); border-color: var(--border-color-strong); }
 .seg-radio input:checked + span { color: var(--tone, var(--enfasis-color)); border-color: color-mix(in srgb, var(--tone, var(--enfasis-color)) 50%, transparent); background: color-mix(in srgb, var(--tone, var(--enfasis-color)) 14%, transparent); }
@@ -87,21 +87,21 @@
     position: sticky; bottom: 0; z-index: 5; margin: 0 -1rem -1rem; padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-color);
     background: color-mix(in srgb, var(--card-bg-color) 94%, #000); border-radius: 0 0 14px 14px;
   }
-  .form-actions-bar .btn { flex: 1; }
+  .form-actions-bar .btn { flex: 1 1 auto; }
   .form-actions-bar .spacer { margin-left: 0; }
 }
 
 /* Panel lateral (vista previa / ayuda) */
-.side-card { padding: 1.1rem; border: 1px solid var(--border-color); border-radius: 14px; background: var(--grad-surface); position: sticky; top: 1rem; display: grid; gap: 0.9rem; }
+.side-card { padding: 1rem; border: 1px solid var(--border-color); border-radius: 12px; background: var(--grad-surface); position: sticky; top: 1rem; display: grid; gap: 0.9rem; }
 .side-card h2 { margin: 0; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-color); }
 @media (max-width: 960px) { .side-card { position: static; order: -1; } }
 
 /* ---------- Categoría: vista previa, color, iconos ---------- */
 .cat-preview {
   --color: var(--enfasis-color);
-  display: flex; align-items: center; gap: 0.9rem; padding: 1rem; border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color) 40%, var(--border-color));
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color) 18%, var(--card-bg-color)), var(--card-bg-color));
+  display: flex; align-items: center; gap: 0.9rem; padding: 0.9rem; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color) 30%, var(--border-color));
+  background: color-mix(in srgb, var(--color) 8%, var(--card-bg-color));
 }
 .cat-preview .cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 12px; font-size: 1.2rem; color: var(--color); background: color-mix(in srgb, var(--color) 18%, transparent); }
 .cat-preview strong { display: block; font-size: 1rem; }
@@ -111,8 +111,10 @@
 .color-picker { width: 48px; height: 38px; padding: 2px; border-radius: 10px; border: 1px solid var(--border-color-strong); background: var(--body-bg-color); cursor: pointer; }
 .color-hex { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted-color); font-size: 0.85rem; }
 .swatches { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; background: var(--c); transition: transform 0.12s; padding: 0; }
-.swatch:hover { transform: scale(1.15); }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; background: var(--c); transition: transform 0.12s; padding: 0; }
+.swatch:hover { transform: scale(1.1); }
+.swatch:focus-visible { outline: 2px solid var(--enfasis-color); outline-offset: 2px; }
+@media (pointer: coarse) { .swatch { width: 36px; height: 36px; } .swatches { gap: 0.5rem; } }
 .swatch.active { border-color: var(--body-fg-color); }
 
 .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 0.4rem; max-height: 168px; overflow-y: auto; padding: 0.15rem; }
@@ -121,6 +123,7 @@
   border: 1px solid var(--border-color); background: transparent; color: var(--muted-color); font-size: 1rem; transition: all 0.12s;
 }
 .icon-opt:hover { color: var(--body-fg-color); border-color: var(--border-color-strong); }
+.icon-opt:focus-visible { outline: 2px solid var(--enfasis-color); outline-offset: 1px; }
 .icon-opt.active { color: var(--enfasis-color); border-color: var(--enfasis-color); background: color-mix(in srgb, var(--enfasis-color) 12%, transparent); }
 
 /* ---------- Movimiento ---------- */
@@ -134,12 +137,12 @@
 .receipt-box img { width: 100%; height: auto; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-color); }
 
 /* ---------- Confirmación de borrado ---------- */
-.confirm-card { max-width: 520px; text-align: center; align-items: center; }
+.confirm-card { width: 100%; box-sizing: border-box; max-width: 520px; text-align: center; align-items: center; }
 .confirm-card .dialog-icon { width: 54px; height: 54px; font-size: 1.3rem; }
 .confirm-card h2 { margin: 0; font-size: 1.15rem; }
 .confirm-card p { margin: 0; color: var(--muted-color); }
 .detail-list { list-style: none; margin: 0; padding: 0; width: 100%; text-align: left; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
-.detail-list li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.65rem 0.9rem; font-size: 0.9rem; border-top: 1px solid var(--border-color); }
+.detail-list li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem 1rem; padding: 0.65rem 0.9rem; font-size: 0.9rem; border-top: 1px solid var(--border-color); }
 .detail-list li:first-child { border-top: none; }
 .detail-list span { color: var(--muted-color); }
 .detail-list strong { text-align: right; overflow-wrap: anywhere; }

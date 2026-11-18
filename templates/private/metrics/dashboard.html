@@ -222,6 +222,29 @@
         <span class="muted">{{ automation.extraction.cost_usd|floatformat:2 }} US$ · {{ automation.extraction.cost_per_document|floatformat:3 }} US$/doc</span>
       </div>
       {% endif %}
+      {% if user.is_superuser %}
+      <div class="client-usage">
+        <h3 class="client-usage-title">Uso por cliente <span class="muted">· solo superusuarios</span></h3>
+        {% if client_usage %}
+        <div class="table-wrapper">
+          <table class="table table-cards">
+            <thead><tr><th>Cliente</th><th class="num">Docs</th><th class="num">Coste</th><th class="num">Coste/doc</th><th>Peso</th></tr></thead>
+            <tbody>
+              {% for c in client_usage %}
+              <tr>
+                <td class="cell-primary" data-label="Cliente">{{ c.name }}</td>
+                <td class="num" data-label="Docs">{{ c.documents }}</td>
+                <td class="num" data-label="Coste">{{ c.cost_usd|floatformat:2 }} US$</td>
+                <td class="num" data-label="Coste/doc">{{ c.cost_per_document|floatformat:3 }} US$</td>
+                <td data-label="Peso"><div class="bar"><span style="--pct:{{ c.share|floatformat:0 }}%; --bar:var(--color-info)"></span></div></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}<p class="empty">Sin extracciones en el periodo.</p>{% endif %}
+      </div>
+      {% endif %}
     </article>
   </section>
 

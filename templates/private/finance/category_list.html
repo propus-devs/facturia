@@ -6,9 +6,8 @@
     <link rel="stylesheet" href="{% static 'css/finance/category_list.css' %}">
 {% endblock %}
 {% block content %}
-<a href="{% url 'finance:movements' %}" class="btn btn-back btn-sm">{% icon "back" %} Volver a movimientos</a>
 <h1 class="page-title"><i class="fa-solid fa-tags"></i> Tus categorías
-  <span class="page-actions"><a href="{% url 'finance:new_category' %}" class="btn btn-primary">{% icon "new" %} Nueva categoría</a></span>
+  <span class="page-actions page-actions-compact"><a href="{% url 'finance:new_category' %}" class="btn" aria-label="Nueva categoría">{% icon "new" %}<span class="btn-label"> Nueva categoría</span></a></span>
 </h1>
 
 {% for group in groups %}
@@ -21,7 +20,7 @@
   <div class="category-grid">
     {% for category in group.items %}
     <article class="category-card" style="--color:{{ category.color|default:'#64748b' }}">
-      <a href="{% url 'finance:edit_category' category.pk %}" class="cat-link card-link">
+      <a href="{% url 'finance:category_detail' category.pk %}" class="cat-link card-link">
         <span class="cat-icon"><i class="{{ category.icon|default:'fa-solid fa-tag' }}"></i></span>
         <span class="cat-info">
           <strong class="category-name">{{ category.name }}</strong>

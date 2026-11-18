@@ -1,7 +1,7 @@
 /* Layout general */
 .layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
   gap: 0.85rem;
   padding: 0;
 }

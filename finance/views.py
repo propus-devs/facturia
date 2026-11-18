@@ -188,11 +188,76 @@ class MovementCategoryCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
+class MovementCategoryDetailView(LoginRequiredMixin, ListView):
+    """Detalle de una categoría: sus movimientos con filtros sencillos y acceso a editarla."""
+    template_name = "private/finance/category_detail.html"
+    context_object_name = "movements"
+    paginate_by = 25
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            self.category = get_object_or_404(
+                MovementCategory, pk=kwargs["pk"], client=request.user.client
+            )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        # Siempre acotado a la categoría de la URL (un ?category= distinto no amplía el resultado).
+        return get_filtered_movements(
+            self.request,
+            base_qs=FinancialMovement.objects.filter(
+                client=self.request.user.client, category=self.category
+            ).select_related("category"),
+        ).order_by("-date", "-pk")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        request = self.request
+        totals = self.object_list.aggregate(total=Sum("amount"), n=Count("pk"))
+        total, n = totals["total"] or 0, totals["n"]
+        context["category"] = self.category
+        context["total"] = total
+        context["count"] = n
+        context["average"] = total / n if n else 0
+        context["ranking"] = self._ranking()
+        context["payment_methods"] = FinancialMovement.PAYMENT_CHOICES
+        spec = [
+            ("q", "Búsqueda", None, False),
+            ("method", "Método", dict(FinancialMovement.PAYMENT_CHOICES), False),
+            ("start", "Desde", listing.pretty, False),
+            ("end", "Hasta", listing.pretty, False),
+        ]
+        context["active_filters"] = listing.active_filters(request, spec)
+        page_obj = context.get("page_obj")
+        context["page_numbers"] = listing.page_window(page_obj) if page_obj and page_obj.paginator.num_pages > 1 else []
+        context["querystring"] = listing.qs_without(request)
+        return context
+
+
+    def _ranking(self):
+        """Puesto de la categoría entre las de su mismo tipo (histórico, sin filtros) y su peso en el total."""
+        rows = list(
+            MovementCategory.objects.filter(client=self.request.user.client, type=self.category.type)
+            .annotate(total=Sum("movements__amount"))
+            .values_list("pk", "total")
+        )
+        rows.sort(key=lambda r: r[1] or 0, reverse=True)
+        grand = sum((t or 0) for _, t in rows)
+        mine = next((t or 0 for pk, t in rows if pk == self.category.pk), 0)
+        position = next(i for i, (pk, _) in enumerate(rows, 1) if pk == self.category.pk)
+        return {
+            "position": position,
+            "of": len(rows),
+            "share": round(mine * 100 / grand) if grand else 0,
+        }
+
+
 class MovementCategoryUpdateView(LoginRequiredMixin, UpdateView):
     model = MovementCategory
     form_class = MovementCategoryForm
     template_name = "private/finance/category_form.html"
-    success_url = reverse_lazy("finance:categories")
+    def get_success_url(self):
+        return reverse("finance:category_detail", kwargs={"pk": self.object.pk})
 
     def get_queryset(self):
         return MovementCategory.objects.filter(

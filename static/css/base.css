@@ -12,7 +12,7 @@
   --border-color-strong: rgba(255, 255, 255, 0.14);
   --surface-hover: rgba(255, 255, 255, 0.05);
   /* superficie con degradado sutil: paneles, tarjetas, tablas, filtros */
-  --grad-surface: linear-gradient(180deg, color-mix(in srgb, var(--card-bg-color) 93%, #fff), var(--card-bg-color));
+  --grad-surface: linear-gradient(180deg, color-mix(in srgb, var(--card-bg-color) 97%, #fff), var(--card-bg-color));
 
   /* Estados: apagados para no competir con el contenido; legibles sobre fondo oscuro */
   --color-success: #3fbf7f;
@@ -24,6 +24,23 @@
 html, body {
   height: 100%;
   margin: 0px;
+}
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* Foco visible en cualquier elemento interactivo (los componentes pueden afinarlo) */
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--enfasis-color);
+  outline-offset: 2px;
+}
+
+/* Preferencia de movimiento reducido: único uso justificado de !important (anular animaciones de cualquier hoja) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* iOS no infla el texto al girar el móvil */
@@ -44,9 +61,12 @@ body {
 h1, h2, h3, h4, h5, p {
   color: var(--body-fg-color);
 }
+h2 { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem); }
+h3 { font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem); }
 
 /* ---------- Layout con sidebar ---------- */
 :root { --sidebar-w: 232px; --sidebar-w-collapsed: 68px; }
+@media (max-width: 1024px) { :root { --sidebar-w: 208px; } }
 
 .app-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
 .app-content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -86,7 +106,7 @@ h1, h2, h3, h4, h5, p {
   text-decoration: none;
   font-weight: 600;
 }
-.sidebar-brand img, .brand-logo { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-color); flex-shrink: 0; object-fit: contain; background: var(--card-bg-color); }
+.sidebar-brand img, .brand-logo { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; object-fit: contain; background: var(--card-bg-color); }
 .brand-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; font-size: 0.95rem; }
 .topbar-brand { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; }
 .topbar-brand strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
@@ -190,6 +210,8 @@ h1, h2, h3, h4, h5, p {
     z-index: 30;
   }
   .topbar .brand-logo { width: 32px; height: 32px; border-radius: 8px; }
+  .topbar #sidebar-open { min-width: 44px; min-height: 44px; padding: 0; font-size: 1.05rem; }
+  .sidebar-nav a, .sidebar-user, .sidebar-logout { min-height: 44px; box-sizing: border-box; }
 
   .sidebar {
     position: fixed;
@@ -216,7 +238,7 @@ h1, h2, h3, h4, h5, p {
 }
 
 .app-main {
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.25rem 2.5rem;
   max-width: 1280px;
   width: 100%;
   margin: 0 auto;
@@ -233,6 +255,9 @@ h1, h2, h3, h4, h5, p {
   .topbar .btn { min-width: 2.75rem; min-height: 2.75rem; }
 }
 
+@media (min-width: 1025px) { .app-main { padding: 2rem 1.5rem 3rem; } }
+@media (max-width: 640px) { .app-main { padding: 1rem 1rem 2rem; } }
+
 .messages {
     list-style: none;
     padding: 0;
@@ -245,6 +270,7 @@ h1, h2, h3, h4, h5, p {
     border-radius: 8px;
     font-weight: 500;
     font-size: 0.9rem;
+    overflow-wrap: anywhere;
     color: var(--tone, var(--body-fg-color));
     background: color-mix(in srgb, var(--tone, #fff) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--tone, #fff) 28%, transparent);
@@ -267,16 +293,16 @@ h1, h2, h3, h4, h5, p {
 .error-card {
   box-sizing: border-box;
   text-align: center;
-  padding: 3rem;
+  padding: clamp(1.5rem, 6vw, 3rem);
   background: var(--card-bg-color);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
   max-width: 500px;
 }
 @media (max-width: 480px) { .error-card { padding: 2rem 1.25rem; } }
 
 .error-code {
-  font-size: 5rem;
+  font-size: clamp(3.5rem, 18vw, 5rem);
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--enfasis-color);

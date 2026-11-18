@@ -53,6 +53,7 @@
         <form method="POST" class="login-card" novalidate>
             {% csrf_token %}
             <header class="login-card-head">
+                <span class="card-logo" aria-hidden="true"><img src="{% static 'favicons/android-chrome-192x192.png' %}" alt=""></span>
                 <span class="login-card-icon"><i class="fa-solid fa-shield-halved"></i></span>
                 <h2 id="login-title">Iniciar sesión</h2>
                 <p>Accede a tu panel de documentos.</p>
@@ -85,6 +86,7 @@
                         <i class="fa-solid fa-eye-slash"></i>
                     </button>
                 </div>
+                <small class="field-hint" id="password-hint" data-min="8">Mínimo 8 caracteres</small>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block login-submit">
@@ -93,6 +95,7 @@
 
             <p class="login-note"><i class="fa-solid fa-lock"></i> Acceso privado · Uso interno empresarial</p>
         </form>
+        <a href="#intro-title" class="scroll-hint" aria-label="Ver más sobre FacturIA"><i class="fa-solid fa-chevron-down"></i></a>
     </section>
 </div>
 {% endblock %}
@@ -109,6 +112,25 @@
         usernameInput.setAttribute("autocomplete", "username");
         passwordInput.placeholder = "Tu contraseña";
         passwordInput.setAttribute("autocomplete", "current-password");
+
+        // Sombra del logo (móvil) y botón «Entrar»: usuario relleno y contraseña con la longitud mínima
+        // de AUTH_PASSWORD_VALIDATORS (MinimumLengthValidator, 8 por defecto); se lee del texto de ayuda.
+        const hint = document.getElementById("password-hint");
+        const MIN_PASSWORD = Number(hint.dataset.min);
+        passwordInput.setAttribute("aria-describedby", "password-hint");
+        const card = document.querySelector(".login-card");
+        const submitBtn = card.querySelector(".login-submit");
+        const updateReady = () => {
+            const ready = usernameInput.value.trim() !== "" && passwordInput.value.length >= MIN_PASSWORD;
+            card.classList.toggle("is-ready", ready);
+            submitBtn.disabled = !ready;   // «Entrar» solo se activa con los datos completos
+        };
+        ["input", "change"].forEach((ev) => {
+            usernameInput.addEventListener(ev, updateReady);
+            passwordInput.addEventListener(ev, updateReady);
+        });
+        updateReady();
+        setTimeout(updateReady, 300);      // el autocompletado del navegador no siempre lanza eventos
 
         toggleBtn.addEventListener("click", () => {
             const show = passwordInput.type === "password";

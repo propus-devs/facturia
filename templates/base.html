@@ -84,9 +84,10 @@
     <div class="topbar">
       <button type="button" class="btn btn-ghost" id="sidebar-open" aria-label="Abrir menú">{% icon "menu" %}</button>
       <span class="topbar-brand">
+        <strong>{{ user.client.name }}</strong>
         {% if user.client.logo %}<img src="{% url 'clients:logo' %}?v={{ user.client.logo.name|urlencode }}" alt="" class="brand-logo">
         {% else %}<img src="{% static 'favicons/android-chrome-192x192.png' %}" alt="" class="brand-logo">{% endif %}
-        <strong>{{ user.client.name }}</strong>
+        
       </span>
     </div>
     {% endif %}
