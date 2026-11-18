@@ -275,14 +275,15 @@ class TestSharedUi:
         assert f.DocumentFactory(status="pending", review_level="recommended").review_key == "recommended"
 
     @pytest.mark.parametrize("name,expected", [
-        ("documents:list", "Documentos"), ("documents:upload", "Subir"), ("dashboard", "Inicio"),
-        ("metrics", "Métricas"), ("finance:movements", "Movimientos"), ("finance:categories", "Categorías"), ("finance:new_movement", "Movimientos"), ("finance:new_category", "Categorías"), ("clients:detail", "Cuenta"),
+        ("documents:list", "Documentos"), ("documents:upload", "Subir documentos"), ("dashboard", "Inicio"),
+        ("metrics", "Métricas"), ("finance:movements", "Movimientos"), ("finance:categories", "Categorías"), ("finance:new_movement", "Movimientos"), ("finance:new_category", "Categorías"), ("clients:detail", "Cuenta de"),
     ])
     def test_sidebar_marks_active_page(self, auth_client, name, expected):
         import re
         body = auth_client.get(reverse(name)).content.decode()
-        active = re.findall(r'<a [^>]*class="active"[^>]*>.*?<span class="nav-label">(.*?)</span>', body, re.S)
-        assert active == [expected]
+        tags = re.findall(r'<a ([^>]*aria-current="page"[^>]*)>', body.split('</aside>')[0])
+        labels = [re.search(r'aria-label="([^"]*)"', t).group(1) for t in tags]
+        assert len(labels) == 1 and labels[0].startswith(expected)
         assert "Cerrar sesión" in body
 
     def test_detail_keeps_documents_active_and_login_has_no_sidebar(self, auth_client, client, user):
@@ -318,9 +319,9 @@ class TestLogoutConfirmation:
 class TestFinanceSeparateEntries:
     def test_movements_and_categories_are_separate_top_level_links(self, auth_client):
         body = auth_client.get(reverse("dashboard")).content.decode()
-        assert "nav-group" not in body and "nav-sub" not in body
+        assert "nav-sub" not in body
         nav = body.split('class="sidebar-nav"')[1].split("</nav>")[0]
-        assert nav.count("<a ") == 8
+        assert nav.count("<a ") == 6
         assert nav.index("Documentos") < nav.index("Movimientos") < nav.index("Categorías") < nav.index("Métricas")
 
     def test_edit_category_keeps_categories_active(self, auth_client, user):
@@ -366,7 +367,7 @@ class TestSidebarBrand:
 
     def test_topbar_uses_company_branding_too(self, auth_client, client_entity):
         body = auth_client.get(reverse("dashboard")).content.decode()
-        assert f"<strong>{client_entity.name}</strong>" in body.split('class="topbar"')[1]
+        assert f'alt="{client_entity.name}"' in body.split('class="topbar"')[1]
 
     def test_other_tenant_name_never_shown(self, auth_client, other_client_entity):
         assert other_client_entity.name not in self.brand(auth_client)

@@ -31,35 +31,47 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav">
-      <a href="{% url 'dashboard' %}" title="Inicio" {% if page == 'dashboard' %}class="active" aria-current="page"{% endif %}>
+    <nav class="sidebar-nav" aria-label="Secciones">
+      <a href="{% url 'dashboard' %}" title="Inicio" aria-label="Inicio" {% if page == 'dashboard' %}class="active" aria-current="page"{% endif %}>
         {% icon "home" %}<span class="nav-label">Inicio</span></a>
-      <a href="{% url 'documents:list' %}" title="Documentos" {% if ns == 'documents' and page != 'upload' and page != 'drive' %}class="active" aria-current="page"{% endif %}>
-        {% icon "document" %}<span class="nav-label">Documentos</span></a>
-      <a href="{% url 'documents:drive' %}" title="Archivo" {% if page == 'drive' %}class="active" aria-current="page"{% endif %}>
+
+      <p class="nav-group" aria-hidden="true"><span class="nav-label">Documentos</span></p>
+      <a href="{% url 'documents:list' %}" title="Documentos" aria-label="Documentos" {% if ns == 'documents' and page != 'upload' and page != 'drive' %}class="active" aria-current="page"{% endif %}>
+        {% icon "document" %}<span class="nav-label">Documentos</span>
+        {% if sidebar_pending %}<span class="nav-badge" title="{{ sidebar_pending }} pendiente{{ sidebar_pending|pluralize }} de revisión"><span class="visually-hidden">{{ sidebar_pending }} pendientes de revisión</span><span aria-hidden="true">{% if sidebar_pending > 99 %}99+{% else %}{{ sidebar_pending }}{% endif %}</span></span>{% endif %}</a>
+      <a href="{% url 'documents:drive' %}" title="Archivo" aria-label="Archivo" {% if page == 'drive' %}class="active" aria-current="page"{% endif %}>
         {% icon "drive" %}<span class="nav-label">Archivo</span></a>
-      <a href="{% url 'documents:upload' %}" title="Subir" {% if page == 'upload' %}class="active" aria-current="page"{% endif %}>
-        {% icon "upload" %}<span class="nav-label">Subir</span></a>
-      <a href="{% url 'finance:movements' %}" title="Movimientos" {% if ns == 'finance' and page != 'categories' and 'category' not in page %}class="active" aria-current="page"{% endif %}>
+
+      <p class="nav-group" aria-hidden="true"><span class="nav-label">Finanzas</span></p>
+      <a href="{% url 'finance:movements' %}" title="Movimientos" aria-label="Movimientos" {% if ns == 'finance' and page != 'categories' and 'category' not in page %}class="active" aria-current="page"{% endif %}>
         {% icon "movements" %}<span class="nav-label">Movimientos</span></a>
-      <a href="{% url 'finance:categories' %}" title="Categorías" {% if ns == 'finance' and page == 'categories' or ns == 'finance' and 'category' in page %}class="active" aria-current="page"{% endif %}>
+      <a href="{% url 'finance:categories' %}" title="Categorías" aria-label="Categorías" {% if ns == 'finance' and page == 'categories' or ns == 'finance' and 'category' in page %}class="active" aria-current="page"{% endif %}>
         {% icon "categories" %}<span class="nav-label">Categorías</span></a>
-      <a href="{% url 'metrics' %}" title="Métricas" {% if page == 'metrics' %}class="active" aria-current="page"{% endif %}>
+
+      <p class="nav-group" aria-hidden="true"><span class="nav-label">Análisis</span></p>
+      <a href="{% url 'metrics' %}" title="Métricas" aria-label="Métricas" {% if page == 'metrics' %}class="active" aria-current="page"{% endif %}>
         {% icon "metrics" %}<span class="nav-label">Métricas</span></a>
-      <a href="{% url 'clients:detail' %}" title="Cuenta" {% if ns == 'clients' %}class="active" aria-current="page"{% endif %}>
-        {% icon "profile" %}<span class="nav-label">Cuenta</span></a>
+
+      {% if user.is_superuser %}
+      <p class="nav-group" aria-hidden="true"><span class="nav-label">Administración</span></p>
+      <a href="{% url 'metrics' %}#client-usage" title="Uso por cliente" aria-label="Uso por cliente">
+        {% icon "clients" %}<span class="nav-label">Uso por cliente</span></a>
+      {% endif %}
     </nav>
 
+    <a href="{% url 'documents:upload' %}" class="btn btn-primary sidebar-upload" title="Subir documentos" aria-label="Subir documentos"{% if page == 'upload' %} aria-current="page"{% endif %}>
+      {% icon "upload" %}<span class="nav-label">Subir</span></a>
+
     <div class="sidebar-bottom">
-      <a class="sidebar-user" href="{% url 'clients:detail' %}" title="{{ user.get_username }}">
+      <a class="sidebar-user" href="{% url 'clients:detail' %}" title="Cuenta" aria-label="Cuenta de {{ user.get_username }}"{% if ns == 'clients' %} aria-current="page"{% endif %}>
         {% icon "profile" %}
         <span class="nav-label sidebar-user-text">
           <span class="sidebar-user-name">{{ user.get_username }}</span>
           {% for role in user.roles.all|slice:":1" %}<span class="sidebar-role">{{ role.name }}</span>{% endfor %}
         </span>
       </a>
-      <button type="button" class="btn btn-ghost sidebar-logout" id="logout-open" title="Cerrar sesión">
-        {% icon "logout" %}<span class="nav-label">Cerrar sesión</span>
+      <button type="button" class="btn btn-ghost sidebar-logout" id="logout-open" title="Cerrar sesión" aria-label="Cerrar sesión">
+        {% icon "logout" %}
       </button>
     </div>
   </aside>
@@ -84,10 +96,8 @@
     <div class="topbar">
       <button type="button" class="btn btn-ghost" id="sidebar-open" aria-label="Abrir menú">{% icon "menu" %}</button>
       <span class="topbar-brand">
-        <strong>{{ user.client.name }}</strong>
-        {% if user.client.logo %}<img src="{% url 'clients:logo' %}?v={{ user.client.logo.name|urlencode }}" alt="" class="brand-logo">
-        {% else %}<img src="{% static 'favicons/android-chrome-192x192.png' %}" alt="" class="brand-logo">{% endif %}
-        
+        {% if user.client.logo %}<img src="{% url 'clients:logo' %}?v={{ user.client.logo.name|urlencode }}" alt="{{ user.client.name }}" class="brand-logo">
+        {% else %}<img src="{% static 'favicons/android-chrome-192x192.png' %}" alt="{{ user.client.name|default:'FacturIA' }}" class="brand-logo">{% endif %}
       </span>
     </div>
     {% endif %}
@@ -131,10 +141,29 @@
         dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });  // clic en el fondo
 
         // Móvil: el sidebar es un panel que se abre desde la barra superior
-        const setOpen = (open) => shell.classList.toggle("sidebar-open", open);
+        const sidebar = document.getElementById("sidebar");
+        const setOpen = (open, returnFocus) => {
+          shell.classList.toggle("sidebar-open", open);
+          openBtn.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open) { const first = sidebar.querySelector("a"); if (first) first.focus(); }
+          else if (returnFocus) openBtn.focus();
+        };
+        openBtn.setAttribute("aria-controls", "sidebar");
+        openBtn.setAttribute("aria-expanded", "false");
         openBtn.addEventListener("click", () => setOpen(true));
         overlay.addEventListener("click", () => setOpen(false));
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && shell.classList.contains("sidebar-open")) setOpen(false, true);
+        });
+        // Al navegar desde el panel, se cierra (por si la página no recarga el DOM)
+        sidebar.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+        // Deslizar hacia la izquierda sobre el panel lo cierra
+        let touchX = null;
+        sidebar.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+        sidebar.addEventListener("touchend", (e) => {
+          if (touchX !== null && e.changedTouches[0].clientX - touchX < -60) setOpen(false, true);
+          touchX = null;
+        }, { passive: true });
       })();
     </script>
   {% endblock %}

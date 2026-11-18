@@ -48,3 +48,24 @@ class TestMetricsView:
         r = auth_client.get(reverse("metrics"))
         assert [c["documents"] for c in r.context["client_usage"]] == [1]
         assert "Uso por cliente" in r.content.decode()
+
+
+class TestExtractionCostVisibility:
+    def test_regular_user_does_not_see_cost_or_calls(self, auth_client, document):
+        run(document, "0.25")
+        body = auth_client.get(reverse("metrics")).content.decode()
+        assert "US$" not in body and "llamadas" not in body
+
+    def test_superuser_sees_cost_and_calls(self, auth_client, user, document):
+        run(document, "0.25")
+        user.is_superuser = True
+        user.save()
+        body = auth_client.get(reverse("metrics")).content.decode()
+        assert "llamadas" in body and "US$/doc" in body
+
+    def test_service_hides_extraction_for_regular_user(self, user, document):
+        from documents.services.metrics_service import MetricsService
+        run(document, "0.25")
+        assert MetricsService.get_user_metrics(user=user, start=None, end=None)["extraction"] == {}
+        user.is_superuser = True
+        assert MetricsService.get_user_metrics(user=user, start=None, end=None)["extraction"]["runs"] == 1

@@ -95,6 +95,10 @@ class TestUsage:
     def test_in_dashboard_metrics(self, user, client_entity):
         d = DocumentFactory(client=client_entity)
         ExtractionRunFactory(document=d, client=client_entity, cost_usd=Decimal("0.002"))
+        # Usuario normal: sin coste ni llamadas; superusuario: sí.
+        m = MetricsService.get_user_metrics(user, date(2000, 1, 1), date(2100, 1, 1))
+        assert m["extraction"] == {}
+        user.is_superuser = True
         m = MetricsService.get_user_metrics(user, date(2000, 1, 1), date(2100, 1, 1))
         assert m["extraction"]["cost_usd"] == 0.002
 

@@ -297,7 +297,8 @@ class MetricsService:
                 "by_category": by_category,
             },
             "status_distribution": status_distribution,
-            "extraction": _usage_summary(extraction_usage(user.client, start, end)),
+            # Coste y llamadas de extracción: solo para superusuarios (también en la API).
+            "extraction": _usage_summary(extraction_usage(user.client, start, end)) if user.is_superuser else {},
         }
     
     @staticmethod

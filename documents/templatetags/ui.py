@@ -51,6 +51,7 @@ ICONS = {
     "finance": "fa-solid fa-coins",
     "metrics": "fa-solid fa-chart-line",
     "profile": "fa-solid fa-user",
+    "clients": "fa-solid fa-building",
     "menu": "fa-solid fa-bars",
     "collapse": "fa-solid fa-angles-left",
     "logout": "fa-solid fa-right-from-bracket",
