@@ -25,6 +25,8 @@ class Company(models.Model):
     postal_code = models.CharField(max_length=20, blank=True, default="")
     city = models.CharField(max_length=100, blank=True, default="")
     country = models.CharField(max_length=2, default="ES", help_text="ISO 3166-1 alpha-2")
+    email = models.EmailField(blank=True, default="")   # destinatario al enviar facturas/presupuestos
+    phone = models.CharField(max_length=30, blank=True, default="")
     is_provider = models.BooleanField(default=False, db_index=True)
     is_customer = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -75,6 +77,7 @@ class Document(models.Model):
         ("delivery_credit_note", "Abono de albarán"),
         ("receipt", "Ticket"),
         ("quote", "Presupuesto"),
+        ("proforma", "Proforma"),
     ]
 
     TOTAL_SOURCE_CHOICES = [
@@ -88,7 +91,15 @@ class Document(models.Model):
         ("pending", "Pendiente"),
         ("approved", "Aprobado"),
         ("rejected", "Rechazado"),
+        ("draft", "Borrador"),      # solo documentos emitidos en la app
+        ("voided", "Anulado"),      # solo documentos emitidos en la app
     ]
+
+    # Campos que no pueden cambiar en un documento emitido ya aprobado (salvo vía services/issuing.py)
+    ISSUED_LOCKED_FIELDS = (
+        "document_type", "document_number", "issue_date", "company_id", "flow",
+        "base_amount", "tax_amount", "tax_percentage", "total_amount", "currency", "iban",
+    )
 
     REVIEW_LEVEL_CHOICES = [
         ('auto', 'Aprobado automáticamente'),
@@ -231,7 +242,8 @@ class Document(models.Model):
     )
     external_id = models.CharField(max_length=255, null=True, blank=True)
     original_name = models.CharField(max_length=255)
-    file = HashedFileField(upload_to=document_upload_to)
+    # Vacío solo en borradores emitidos en la app (el PDF se genera al aprobar); ver clean().
+    file = HashedFileField(upload_to=document_upload_to, blank=True)
     document_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     document_number = models.CharField(max_length=255, null=True, blank=True)
     confidence = models.JSONField(default=dict)
@@ -321,6 +333,7 @@ class Document(models.Model):
         ("n8n", "n8n (API de ingesta)"),
         ("upload", "Subida en la app"),
         ("import", "Importación"),
+        ("app", "Emitido en la app"),
     ]
     processing_status = models.CharField(
         max_length=12, choices=PROCESSING_CHOICES, default="processed", db_index=True
@@ -377,10 +390,42 @@ class Document(models.Model):
     def __str__(self):
         return f"{self.document_number or self.original_name} ({self.flow})"
     
+    @property
+    def is_issued(self):
+        """Documento creado desde la app (no recibido por OCR/n8n)."""
+        return self.source == "app"
+
+    def _check_file_and_status(self):
+        # En save() y no en clean(): los ModelForm sin campo `file` (rectificar) llaman a clean().
+        if not self.file and not (self.is_issued and self.status == "draft"):
+            raise ValidationError({"file": "El archivo es obligatorio."})
+        if self.status in ("draft", "voided") and not self.is_issued:
+            raise ValidationError({"status": "Borrador y anulado solo existen en documentos emitidos."})
+
+    def _check_issued_lock(self):
+        """Un documento emitido y aprobado no se edita: solo se anula o se rectifica.
+
+        `services/issuing.py` activa `_issuing_op` para las operaciones permitidas."""
+        if not (self.pk and self.is_issued) or getattr(self, "_issuing_op", False):
+            return
+        prev = Document.all_objects.filter(pk=self.pk).values(
+            "status", *self.ISSUED_LOCKED_FIELDS
+        ).first()
+        if not prev or prev["status"] not in ("approved", "voided"):
+            return
+        changed = [f for f in self.ISSUED_LOCKED_FIELDS if prev[f] != getattr(self, f)]
+        if changed:
+            raise ValidationError(
+                f"Un documento emitido aprobado no se puede modificar ({', '.join(changed)}). "
+                "Anúlalo o emite una rectificativa."
+            )
+
     def save(self, *args, **kwargs):
         if self.company and self.company.client != self.client:
             raise ValueError("Company must belong to the same client.")
-        
+
+        self._check_file_and_status()
+        self._check_issued_lock()
         self.full_clean()
         super().save(*args, **kwargs)
 
@@ -463,6 +508,10 @@ class Document(models.Model):
         )
 
     def create_rectification(self, user, reason=None, **kwargs):
+        if self.is_issued:
+            # Los emitidos se corrigen con una rectificativa (services/issuing.issue_rectification):
+            # esta vía marcaría el original como no vigente y crearía una copia sin PDF ni número.
+            raise ValidationError("Un documento emitido se rectifica desde Ventas.")
         parent = self.parent_document or self
 
         if parent.parent_document_id is not None:
@@ -611,6 +660,7 @@ class DocumentFile(models.Model):
         ("upload", "Subida web"),
         ("mobile", "Foto móvil"),
         ("import", "Importación"),
+        ("issued", "Emitido en la app"),
     ]
 
     document = models.OneToOneField(Document, on_delete=models.CASCADE, related_name="stored_file")
@@ -722,6 +772,8 @@ class InvoiceLine(models.Model):
     quantity = models.DecimalField(max_digits=12, decimal_places=4, default=1)
     unit_price = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
     tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    # Descuento de la línea en % (documentos emitidos); amount = cantidad × precio × (1 − dto)
+    discount_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     page = models.PositiveSmallIntegerField(null=True, blank=True)   # página del PDF donde figura la línea
 
@@ -789,6 +841,13 @@ class DocumentAuditLog(models.Model):
         ("archived", "Archivado"),
         ("unarchived", "Desarchivado"),
         ("rectified", "Rectificado"),
+        ("issued", "Emitido"),
+        ("sent", "Enviado"),
+        ("voided", "Anulado"),
+        ("converted", "Convertido"),
+        ("accepted", "Aceptado por el cliente"),
+        ("declined", "Rechazado por el cliente"),
+        ("commented", "Comentario del cliente"),
     ]
 
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="audit_logs")
@@ -810,3 +869,109 @@ class DocumentAuditLog(models.Model):
         if self.pk is not None:
             raise ValueError("DocumentAuditLog es de solo añadir.")
         super().save(*args, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Emisión de facturas y presupuestos desde la app
+# ---------------------------------------------------------------------------
+
+class NumberSequence(models.Model):
+    """Contador de numeración por cliente, tipo, prefijo y año.
+
+    Las facturas reciben número al aprobar (sin huecos); los presupuestos tienen serie propia.
+    Se incrementa solo con `services/numbering.py` (select_for_update)."""
+    KIND_CHOICES = [
+        ("invoice", "Factura"),
+        ("corrected", "Rectificativa"),
+        ("receipt", "Ticket"),
+        ("quote", "Presupuesto"),
+        ("proforma", "Proforma"),
+    ]
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="number_sequences")
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES)
+    prefix = models.CharField(max_length=10, blank=True, default="")
+    year = models.PositiveSmallIntegerField()
+    next_number = models.PositiveIntegerField(default=1)
+    padding = models.PositiveSmallIntegerField(default=4)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["client", "kind", "prefix", "year"], name="unique_number_sequence"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.prefix}{self.year}-{self.next_number:0{self.padding}d} ({self.kind})"
+
+    def format(self, number):
+        return f"{self.prefix}{self.year}-{number:0{self.padding}d}"
+
+
+class IssuedDocument(models.Model):
+    """Datos propios de un documento emitido en la app (el resto vive en `Document`)."""
+    PAYMENT_METHOD_CHOICES = [
+        ("transfer", "Transferencia"),
+        ("card", "Tarjeta"),
+        ("cash", "Efectivo"),
+        ("direct_debit", "Domiciliación"),
+        ("other", "Otro"),
+    ]
+    QUOTE_STATUS_CHOICES = [
+        ("draft", "Borrador"),
+        ("sent", "Enviado"),
+        ("accepted", "Aceptado"),
+        ("declined", "Rechazado"),
+        ("converted", "Convertido en factura"),
+    ]
+
+    document = models.OneToOneField(Document, on_delete=models.CASCADE, related_name="issued")
+    due_date = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)       # caducidad del presupuesto
+    payment_method = models.CharField(max_length=15, choices=PAYMENT_METHOD_CHOICES, blank=True, default="")
+    notes = models.TextField(blank=True, default="")
+    global_discount_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    withholding_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0)   # retención IRPF
+    apply_surcharge = models.BooleanField(default=False)   # recargo de equivalencia (5,2 / 1,4 / 0,5)
+    # Datos fiscales congelados al aprobar/enviar (la factura no cambia si luego cambia la ficha)
+    issuer_snapshot = models.JSONField(default=dict, blank=True)
+    recipient_snapshot = models.JSONField(default=dict, blank=True)
+    public_token = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    quote_status = models.CharField(max_length=10, choices=QUOTE_STATUS_CHOICES, blank=True, default="")
+    customer_comment = models.TextField(blank=True, default="")
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    converted_to = models.ForeignKey(
+        Document, null=True, blank=True, on_delete=models.SET_NULL, related_name="converted_from_quotes"
+    )
+    # Rectificativa emitida (corrected_invoice): factura que rectifica. El original NO cambia de versión
+    # ni deja de ser «actual»: la rectificativa resta (services/signs.py) y ambos cuentan en métricas.
+    rectifies = models.ForeignKey(
+        Document, null=True, blank=True, on_delete=models.PROTECT, related_name="rectifications"
+    )
+
+    def __str__(self):
+        return f"Emitido de {self.document_id}"
+
+
+class DocumentSend(models.Model):
+    """Registro de envíos (email o enlace). No guarda cuerpo del mensaje."""
+    CHANNEL_CHOICES = [("email", "Email"), ("link", "Enlace")]
+    STATUS_CHOICES = [("queued", "En cola"), ("sent", "Enviado"), ("failed", "Fallido")]
+
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="sends")
+    channel = models.CharField(max_length=5, choices=CHANNEL_CHOICES)
+    to_email = models.EmailField(blank=True, default="")
+    subject = models.CharField(max_length=255, blank=True, default="")
+    status = models.CharField(max_length=6, choices=STATUS_CHOICES, default="queued")
+    error = models.CharField(max_length=255, blank=True, default="")
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="document_sends")
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.channel} → {self.status}"

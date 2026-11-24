@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from documents.public_views import PublicQuotePDFView, PublicQuoteView
 from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic import RedirectView
 from django.conf import settings
@@ -41,6 +42,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('documents/', include("documents.urls")),
+    path('ventas/', include("documents.issued_urls")),
+    path('p/<str:token>/', PublicQuoteView.as_view(), name='public_quote'),
+    path('p/<str:token>/pdf/', PublicQuotePDFView.as_view(), name='public_quote_pdf'),
     path('metrics/dashboard/', MetricsDashboardView.as_view(), name='metrics'),
     path('finance/', include("finance.urls")),
     path('clients/', include("clients.urls")),

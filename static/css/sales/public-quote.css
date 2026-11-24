@@ -1,0 +1,47 @@
+/* Página pública de un presupuesto (sin sesión). Usa los componentes de ui.css. */
+.pq { display: flex; flex-direction: column; gap: 1rem; max-width: 960px; margin: 0 auto; }
+.pq-card { padding: 1.1rem; border: 1px solid var(--border-color); border-radius: 12px; background: var(--grad-surface); min-width: 0; }
+.pq-card h2 { margin: 0 0 0.7rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-color); }
+
+.pq-head { display: flex; flex-direction: column; gap: 0.9rem; }
+.pq-issuer { margin: 0; font-size: 0.85rem; color: var(--muted-color); overflow-wrap: anywhere; }
+.pq-issuer strong { display: block; font-size: 1rem; color: var(--body-fg-color); }
+.pq-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.8rem; }
+.pq-title h1 { margin: 0; font-size: clamp(1.25rem, 1.1rem + 1vw, 1.6rem); font-weight: 700; overflow-wrap: anywhere; }
+.pq-meta { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem 1.5rem; }
+.pq-meta > div { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.88rem; }
+.pq-meta dt { color: var(--muted-color); }
+.pq-meta dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+
+.pq-parties { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.pq-party { margin: 0; font-style: normal; font-size: 0.88rem; line-height: 1.5; overflow-wrap: anywhere; }
+.pq-party strong { display: block; }
+
+.pq-banner { margin: 0; padding: 0.7rem 0.9rem; border-radius: 10px; font-size: 0.9rem; color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, transparent); border: 1px solid color-mix(in srgb, var(--tone) 32%, transparent); }
+.pq-banner { --tone: var(--muted-color); }
+
+.pq-lines .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pq-lines td.desc { overflow-wrap: anywhere; min-width: 12rem; }
+
+.pq-totals { margin: 0 0 0 auto; width: min(100%, 360px); display: flex; flex-direction: column; gap: 0.35rem; }
+.pq-totals > div { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.88rem; }
+.pq-totals dt { color: var(--muted-color); }
+.pq-totals dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+.pq-totals .pq-total { padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 1.1rem; font-weight: 700; }
+.pq-totals .pq-total dt { color: var(--body-fg-color); }
+
+.pq-notes { margin: 0; font-size: 0.88rem; color: var(--muted-color); overflow-wrap: anywhere; }
+
+.pq-pdf-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.8rem; }
+.pq-pdf iframe { display: block; width: 100%; height: min(70vh, 640px); border: 1px solid var(--border-color); border-radius: 8px; background: #fff; }
+
+.pq-form { display: flex; flex-direction: column; gap: 0.9rem; }
+.pq-form label { font-size: 0.82rem; font-weight: 500; color: var(--muted-color); }
+.pq-form textarea { width: 100%; box-sizing: border-box; min-height: 96px; resize: vertical; font-family: inherit; }
+.pq-actions { display: flex; flex-direction: column; gap: 0.5rem; }
+.pq-actions .btn { justify-content: center; }
+
+@media (min-width: 640px) {
+  .pq-meta, .pq-parties { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pq-actions { flex-direction: row; flex-wrap: wrap; }
+}

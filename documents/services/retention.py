@@ -33,14 +33,20 @@ def _reference_date(doc) -> date:
     return doc.issue_date or doc.created_at.date()
 
 
+def _rectified_id(doc):
+    """Factura emitida que rectifica este documento (None si no es una rectificativa emitida)."""
+    return getattr(getattr(doc, "issued", None), "rectifies_id", None)
+
+
 def _chain_root_id(doc):
-    return doc.parent_document_id or doc.pk
+    # Una rectificativa emitida se conserva con su factura original (se agrupan en la misma cadena).
+    return _rectified_id(doc) or doc.parent_document_id or doc.pk
 
 
 def expired_chains(*, client=None, today=None, years=None):
     """Cadenas de versiones caducadas: lista de listas de `Document` (raíz primero)."""
     cutoff = cutoff_date(today, years)
-    qs = Document.all_objects.select_related("stored_file")
+    qs = Document.all_objects.select_related("stored_file", "issued")
     if client is not None:
         qs = qs.filter(client=client)
     chains = {}
@@ -63,8 +69,9 @@ def purge_expired(*, apply=False, client=None, today=None, years=None) -> dict:
         storage = docs[0].file.storage
         ids = [d.pk for d in docs]
         with transaction.atomic():
-            # hijos antes que el padre (parent_document es PROTECT)
-            for d in sorted(docs, key=lambda d: d.version, reverse=True):
+            # hijos antes que el padre (parent_document y IssuedDocument.rectifies son PROTECT):
+            # primero las rectificativas emitidas, luego las versiones de mayor a menor
+            for d in sorted(docs, key=lambda d: (_rectified_id(d) is not None, d.version), reverse=True):
                 d.delete()
         for name in names:
             try:

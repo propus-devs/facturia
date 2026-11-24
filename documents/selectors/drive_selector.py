@@ -43,7 +43,7 @@ TYPE_GROUPS = {
     "albaranes": ("Albaranes", ["delivery"]),
     "abonos": ("Abonos", ["corrected_invoice", "delivery_credit_note"]),
     "tickets": ("Tickets", ["receipt"]),
-    "presupuestos": ("Presupuestos", ["quote"]),
+    "presupuestos": ("Presupuestos", ["quote", "proforma"]),
 }
 # Red de seguridad: un tipo nuevo que no esté en TYPE_GROUPS cae aquí y no desaparece del Drive.
 OTHERS_SLUG = "otros"

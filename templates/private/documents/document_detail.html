@@ -60,7 +60,9 @@
             {% endif %}
 
             <!-- Rectificar documentos que no estén archivados y no hayan sido rectificados -->
-            {% if not document.is_archived and not document.status == "pending" %}
+            {% if document.is_issued %}
+                <a class="btn btn-warning" href="{% url 'sales:detail' document.pk %}">{% icon "rectify" %} Abrir en Ventas</a>
+            {% elif not document.is_archived and not document.status == "pending" %}
                 <button type="button" class="btn btn-warning confirm-action" data-action="rectify">
                     {% icon "rectify" %} Rectificar
                 </button>

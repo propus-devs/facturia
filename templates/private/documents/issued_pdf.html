@@ -1,0 +1,109 @@
+{% load l10n %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 18mm 16mm 22mm; @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9px; color: #6b7280; } }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; font-size: 11px; line-height: 1.4; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .muted { color: #6b7280; }
+  .right { text-align: right; }
+  table { width: 100%; border-collapse: collapse; }
+  .head td { vertical-align: top; }
+  .logo { max-height: 56px; max-width: 180px; margin-bottom: 8px; }
+  .parties { margin: 22px 0 18px; }
+  .parties td { width: 50%; vertical-align: top; padding-right: 16px; }
+  .label { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; margin-bottom: 3px; }
+  .lines th { background: #f3f4f6; padding: 7px 6px; text-align: left; font-size: 10px; }
+  .lines td { padding: 7px 6px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  .lines th.num, .lines td.num { text-align: right; white-space: nowrap; }
+  .totals { width: 46%; margin-left: 54%; margin-top: 16px; }
+  .totals td { padding: 4px 6px; }
+  .totals .grand td { border-top: 2px solid #1f2937; font-size: 14px; font-weight: bold; padding-top: 8px; }
+  .box { margin-top: 20px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 6px; }
+  .draft { color: #b45309; font-weight: bold; letter-spacing: .08em; }
+  .footer { margin-top: 22px; font-size: 9px; color: #6b7280; }
+</style>
+</head>
+<body>
+<table class="head"><tr>
+  <td>
+    {% if logo_data_uri %}<img class="logo" src="{{ logo_data_uri }}" alt="">{% endif %}
+    <div><strong>{{ issuer.name }}</strong></div>
+    {% if issuer.tax_id %}<div>NIF: {{ issuer.tax_id }}</div>{% endif %}
+    {% if issuer.address %}<div>{{ issuer.address }}</div>{% endif %}
+    {% if issuer.postal_code or issuer.city %}<div>{{ issuer.postal_code }} {{ issuer.city }}</div>{% endif %}
+    {% if issuer.email %}<div>{{ issuer.email }}</div>{% endif %}
+  </td>
+  <td class="right">
+    <h1>{{ title }}</h1>
+    {% if is_draft %}<div class="draft">BORRADOR</div>{% endif %}
+    {% if doc.document_number %}<div><strong>N.º {{ doc.document_number }}</strong></div>{% endif %}
+    <div>Fecha: {{ doc.issue_date|date:"d/m/Y" }}</div>
+    {% if is_quote and issued.valid_until %}<div>Válido hasta: {{ issued.valid_until|date:"d/m/Y" }}</div>{% endif %}
+    {% if not is_quote and issued.due_date %}<div>Vencimiento: {{ issued.due_date|date:"d/m/Y" }}</div>{% endif %}
+  </td>
+</tr></table>
+
+{% if rectified %}
+<div class="box">
+  <div class="label">Factura rectificada</div>
+  <div>Rectifica la factura <strong>{{ rectified.document_number }}</strong> de fecha {{ rectified.issue_date|date:"d/m/Y" }}.
+  {% if rectification_reason %}Motivo: {{ rectification_reason }}.{% endif %}
+  Los importes de este documento se descuentan de la factura original.</div>
+</div>
+{% endif %}
+
+<table class="parties"><tr>
+  <td>
+    <div class="label">{% if is_quote %}Presupuesto para{% else %}Facturar a{% endif %}</div>
+    {% if recipient %}
+      <div><strong>{{ recipient.name }}</strong></div>
+      {% if recipient.tax_id %}<div>NIF: {{ recipient.tax_id }}</div>{% endif %}
+      {% if recipient.address %}<div>{{ recipient.address }}</div>{% endif %}
+      {% if recipient.postal_code or recipient.city %}<div>{{ recipient.postal_code }} {{ recipient.city }}</div>{% endif %}
+    {% else %}<div class="muted">—</div>{% endif %}
+  </td>
+  <td></td>
+</tr></table>
+
+<table class="lines">
+  <thead><tr>
+    <th>Concepto</th><th class="num">Cant.</th><th class="num">Precio</th>
+    {% if has_discounts %}<th class="num">Dto.</th>{% endif %}
+    <th class="num">IVA</th><th class="num">Importe</th>
+  </tr></thead>
+  <tbody>
+  {% for l in lines %}
+    <tr>
+      <td>{{ l.description }}</td>
+      <td class="num">{{ l.quantity|floatformat:"-2" }}</td>
+      <td class="num">{{ l.unit_price|floatformat:2 }} €</td>
+      {% if has_discounts %}<td class="num">{% if l.discount_pct %}{{ l.discount_pct|floatformat:"-2" }}%{% endif %}</td>{% endif %}
+      <td class="num">{{ l.tax_rate|floatformat:"-2" }}%</td>
+      <td class="num">{{ l.amount|floatformat:2 }} €</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<table class="totals">
+  {% if issued.global_discount_pct %}<tr><td class="muted">Descuento global</td><td class="right">{{ issued.global_discount_pct|floatformat:"-2" }}%</td></tr>{% endif %}
+  <tr><td>Base imponible</td><td class="right">{{ doc.base_amount|floatformat:2 }} €</td></tr>
+  {% for t in vat_lines %}<tr><td>IVA {{ t.rate|floatformat:"-2" }}% <span class="muted">s/ {{ t.base|floatformat:2 }}</span></td><td class="right">{{ t.amount|floatformat:2 }} €</td></tr>{% endfor %}
+  {% for t in surcharge_lines %}<tr><td>Recargo eq. {{ t.rate|floatformat:"-2" }}%</td><td class="right">{{ t.amount|floatformat:2 }} €</td></tr>{% endfor %}
+  {% for t in withholding_lines %}<tr><td>Retención IRPF {{ t.rate|floatformat:"-2" }}%</td><td class="right">−{{ t.amount|floatformat:2 }} €</td></tr>{% endfor %}
+  <tr class="grand"><td>Total</td><td class="right">{{ doc.total_amount|floatformat:2 }} €</td></tr>
+</table>
+
+{% if not is_quote %}
+<div class="box">
+  <div class="label">Forma de pago</div>
+  {% if issued.payment_method %}<div>{{ issued.get_payment_method_display }}</div>{% endif %}
+  {% if issuer.iban %}<div>IBAN: {{ issuer.iban }}</div>{% endif %}
+</div>
+{% endif %}
+{% if issued.notes %}<div class="box"><div class="label">Notas</div><div>{{ issued.notes|linebreaksbr }}</div></div>{% endif %}
+{% if footer %}<div class="footer">{{ footer|linebreaksbr }}</div>{% endif %}
+</body>
+</html>

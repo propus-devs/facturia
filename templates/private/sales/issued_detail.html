@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% load ui static %}
+{% block title %}{{ document.document_number|default:"Borrador" }} - FacturIA{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sdetail">
+  <header class="sdetail-head">
+    <a class="btn btn-ghost btn-sm" href="{% url cfg.list_url %}" aria-label="Volver" title="Volver">{% icon "back" %} <span>Volver</span></a>
+    <div class="sdetail-title">
+      <h1>{{ document.get_document_type_display }} {{ document.document_number|default:"(borrador)" }}</h1>
+      {% badge "issued" document.status %}
+    </div>
+    <div class="sdetail-actions">
+      {% if can_edit %}<a class="btn" href="{% url 'sales:edit' document.pk %}">{% icon "edit" %} Editar</a>{% endif %}
+      {% if can_approve %}<button type="button" class="btn btn-success" data-dialog-open="approve-dialog">{% icon "approve" %} Emitir</button>{% endif %}
+      {% if is_quote and quote_open %}<button type="button" class="btn btn-success" data-dialog-open="convert-dialog">{% icon "sales" %} Convertir en factura</button>{% endif %}
+      {% if can_send %}<button type="button" class="btn btn-primary" data-dialog-open="send-dialog">{% icon "send" %} Enviar</button>{% endif %}
+      {% if can_rectify %}<button type="button" class="btn" data-dialog-open="rectify-dialog">{% icon "edit" %} Rectificar</button>{% endif %}
+      {% if can_void %}<button type="button" class="btn btn-danger" data-dialog-open="void-dialog">{% icon "void" %} Anular</button>{% endif %}
+      <a class="btn" href="{% url 'sales:pdf' document.pk %}?download=1">{% icon "download" %} Descargar PDF</a>
+    </div>
+  </header>
+
+  <div class="sdetail-layout">
+    <section class="sdetail-preview" aria-label="Vista previa del PDF">
+      <iframe src="{% url 'sales:pdf' document.pk %}" title="PDF del documento"></iframe>
+    </section>
+
+    <aside class="sdetail-side">
+      <section class="side-card">
+        <h2>Resumen</h2>
+        <dl class="kv">
+          <div><dt>Número</dt><dd>{{ document.document_number|default:"Sin asignar" }}</dd></div>
+          <div><dt>Tipo</dt><dd>{{ document.get_document_type_display }}</dd></div>
+          {% if is_quote %}<div><dt>Estado</dt><dd>
+            {% if issued.quote_status == 'sent' %}<span class="badge-status tone-info">Enviado</span>
+            {% elif issued.quote_status == 'accepted' %}<span class="badge-status tone-success">Aceptado</span>
+            {% elif issued.quote_status == 'declined' %}<span class="badge-status tone-danger">Rechazado por el cliente</span>
+            {% elif issued.quote_status == 'converted' %}<span class="badge-status tone-success">Convertido en factura</span>
+            {% else %}<span class="badge-status tone-neutral">Sin enviar</span>{% endif %}</dd></div>
+          {% if issued.accepted_at %}<div><dt>Aceptado el</dt><dd>{{ issued.accepted_at|date:"d/m/Y H:i" }}</dd></div>{% endif %}
+          {% if issued.converted_to %}<div><dt>Factura</dt><dd><a href="{% url 'sales:detail' issued.converted_to.pk %}">{{ issued.converted_to.document_number|default:"Ver borrador" }}</a></dd></div>{% endif %}{% endif %}
+          <div><dt>Contacto</dt><dd>{{ document.company.name|default:"—" }}</dd></div>
+          <div><dt>Emisión</dt><dd>{{ document.issue_date|date:"d/m/Y"|default:"—" }}</dd></div>
+          {% if issued.due_date %}<div><dt>Vencimiento</dt><dd>{{ issued.due_date|date:"d/m/Y" }}</dd></div>{% endif %}
+          {% if issued.valid_until %}<div><dt>Válido hasta</dt><dd>{{ issued.valid_until|date:"d/m/Y" }}</dd></div>{% endif %}
+          {% if issued.payment_method %}<div><dt>Forma de pago</dt><dd>{{ issued.get_payment_method_display }}</dd></div>{% endif %}
+        </dl>
+        {% if issued.notes %}<p class="notes">{{ issued.notes|linebreaksbr }}</p>{% endif %}
+      </section>
+
+      <section class="side-card">
+        <h2>Importes</h2>
+        <dl class="kv kv-amounts">
+          {% for t in tax_lines %}
+          <div><dt>{% if t.kind == 'vat' %}IVA{% elif t.kind == 'surcharge' %}Recargo{% else %}Retención{% endif %} {{ t.rate }} % <small>sobre {{ t.base }} €</small></dt>
+            <dd>{% if t.kind == 'withholding' %}-{% endif %}{{ t.amount }} €</dd></div>
+          {% endfor %}
+          <div class="kv-total"><dt>Total</dt><dd>{{ document.total_amount|default_if_none:"—" }}{% if document.total_amount is not None %} €{% endif %}</dd></div>
+        </dl>
+      </section>
+
+      <section class="side-card">
+        <h2>Líneas</h2>
+        {% if lines %}
+        <ul class="line-list">
+          {% for l in lines %}
+          <li><span class="line-name">{{ l.description }}</span><span class="line-qty">{{ l.quantity|floatformat:"-4" }} × {{ l.unit_price|default_if_none:"" }} €</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}<p class="muted-note">Sin líneas.</p>{% endif %}
+      </section>
+
+      {% if is_quote %}
+      {% if public_url %}
+      <section class="side-card">
+        <h2>{% icon "send" %} Enlace para el cliente</h2>
+        <div class="copy-row">
+          <input type="text" id="public-url" class="copy-input" value="{{ public_url }}" readonly aria-label="Enlace público del presupuesto">
+          <button type="button" class="btn btn-sm" data-copy-target="public-url">Copiar</button>
+        </div>
+        <p class="help-note" data-copy-status role="status"></p>
+        <p class="help-note">El cliente puede verlo, comentarlo y aprobarlo online.</p>
+      </section>
+      {% elif quote_open %}
+      <section class="side-card">
+        <h2>{% icon "send" %} Enlace para el cliente</h2>
+        <p class="help-note">El cliente podrá verlo, comentarlo y aprobarlo online.</p>
+        <form method="post" class="share-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="share">
+          <button type="submit" class="btn btn-sm">Activar enlace</button>
+        </form>
+      </section>
+      {% endif %}
+      {% if issued.customer_comment %}
+      <section class="side-card">
+        <h2>Comentarios del cliente</h2>
+        <p class="notes notes-flush">{{ issued.customer_comment|linebreaksbr }}</p>
+      </section>
+      {% endif %}
+      {% endif %}
+
+      {% if rectifies %}
+      <section class="side-card">
+        <h2>Rectifica a</h2>
+        <p><a href="{% url 'sales:detail' rectifies.pk %}">{{ rectifies.document_number }}</a>
+          <small>del {{ rectifies.issue_date|date:"d/m/Y" }}</small></p>
+        {% if document.rectification_reason %}<p class="notes">Motivo: {{ document.rectification_reason }}</p>{% endif %}
+      </section>
+      {% endif %}
+      {% if rectifications %}
+      <section class="side-card">
+        <h2>Rectificativas</h2>
+        <ul class="line-list">
+          {% for r in rectifications %}
+          <li><span class="line-name"><a href="{% url 'sales:detail' r.pk %}">{{ r.document_number|default:"Borrador" }}</a></span>
+            <span class="line-qty">{{ r.total_amount }} € · {{ r.get_status_display }}</span></li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+
+      {% if sends %}
+      <section class="side-card">
+        <h2>{% icon "send" %} Envíos</h2>
+        <ol class="audit">
+          {% for s in sends %}
+          <li><strong>{{ s.to_email }}</strong>
+            <small>{{ s.get_status_display }} · {{ s.created_at|date:"d/m/Y H:i" }}{% if s.error %} · {{ s.error }}{% endif %}</small></li>
+          {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+
+      <section class="side-card">
+        <h2>{% icon "history" %} Historial</h2>
+        {% if audit_logs %}
+        <ol class="audit">
+          {% for log in audit_logs %}
+          <li><strong>{{ log.get_action_display }}</strong>
+            <small>{{ log.created_at|date:"d/m/Y H:i" }}{% if log.user %} · {{ log.user.get_username }}{% endif %}</small></li>
+          {% endfor %}
+        </ol>
+        {% else %}<p class="muted-note">Sin actividad.</p>{% endif %}
+      </section>
+    </aside>
+  </div>
+</div>
+
+{% if can_approve %}
+<dialog class="dialog" id="approve-dialog" aria-labelledby="approve-title">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="approve">
+    <div class="dialog-icon tone-warning">{% icon "warning" %}</div>
+    <h3 id="approve-title">¿Emitir este documento?</h3>
+    <p>Quedará cerrado y <strong>no se podrá modificar</strong>. Se le asignará su número definitivo.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-success">{% icon "approve" %} Emitir</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{% if is_quote and quote_open %}
+<dialog class="dialog" id="convert-dialog" aria-labelledby="convert-title">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="convert">
+    <div class="dialog-icon tone-info">{% icon "sales" %}</div>
+    <h3 id="convert-title">¿Convertir en factura?</h3>
+    <p>Se creará un <strong>borrador de factura</strong> con las mismas líneas, precios, impuestos y datos del cliente. Podrás revisarlo antes de emitirlo.</p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-success">{% icon "sales" %} Convertir</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{% if can_send %}
+<dialog class="dialog" id="send-dialog" aria-labelledby="send-title">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="send">
+    <div class="dialog-icon tone-info">{% icon "send" %}</div>
+    <h3 id="send-title">Enviar {{ document.document_number }} por email</h3>
+    <p>Se adjuntará el PDF. Puedes editar el asunto y el mensaje (la plantilla base está en los ajustes de facturación).</p>
+    <div class="fld dialog-field">
+      <label for="send-to">Destinatario</label>
+      <input type="email" id="send-to" name="to_email" required value="{{ email_defaults.to_email }}" placeholder="cliente@empresa.com">
+    </div>
+    <div class="fld dialog-field">
+      <label for="send-subject">Asunto</label>
+      <input type="text" id="send-subject" name="subject" required maxlength="255" value="{{ email_defaults.subject }}">
+    </div>
+    <div class="fld dialog-field">
+      <label for="send-body">Mensaje</label>
+      <textarea id="send-body" name="body" rows="6" maxlength="5000">{{ email_defaults.body }}</textarea>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-primary">{% icon "send" %} Enviar</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{% if can_rectify %}
+<dialog class="dialog" id="rectify-dialog" aria-labelledby="rectify-title">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="rectify">
+    <div class="dialog-icon tone-warning">{% icon "warning" %}</div>
+    <h3 id="rectify-title">Rectificar {{ document.document_number }}</h3>
+    <p>Un documento emitido no se modifica: se crea una <strong>factura rectificativa</strong> en borrador con las mismas líneas, que resta de la original. Si solo corriges una parte, ajusta las líneas antes de emitirla.</p>
+    <div class="fld dialog-field">
+      <label for="rectify-reason">Motivo de la rectificación</label>
+      <textarea id="rectify-reason" name="reason" rows="3" maxlength="255" required placeholder="Ej.: error en el precio de la línea 2"></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-warning">{% icon "edit" %} Crear rectificativa</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
+{% if can_void %}
+<dialog class="dialog" id="void-dialog" aria-labelledby="void-title">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="void">
+    <div class="dialog-icon tone-danger">{% icon "void" %}</div>
+    <h3 id="void-title">¿Anular {{ document.document_number }}?</h3>
+    <p>El documento quedará anulado y dejará de contar en los totales.</p>
+    <div class="fld dialog-field">
+      <label for="void-reason">Motivo</label>
+      <textarea id="void-reason" name="reason" rows="3" placeholder="Motivo de la anulación"></textarea>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-danger">{% icon "void" %} Anular</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/sales-shortcut.js' %}"></script>
+<script src="{% static 'js/copy-link.js' %}"></script>
+{% endblock %}

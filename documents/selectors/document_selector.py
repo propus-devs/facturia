@@ -21,11 +21,20 @@ def quarter_range(value):
 class DocumentSelector:
     @staticmethod
     def for_client(client):
-        return Document.all_objects.filter(client=client, is_current=True)
+        """Documentos del flujo de revisión/archivo/métricas. Los borradores y anulados emitidos
+        en la app no entran aquí: se gestionan en Ventas (`issued`)."""
+        return Document.all_objects.filter(client=client, is_current=True).exclude(
+            status__in=("draft", "voided")
+        )
 
     @staticmethod
     def with_versions(client):
-        return Document.all_objects.filter(client=client)
+        return Document.all_objects.filter(client=client).exclude(status__in=("draft", "voided"))
+
+    @staticmethod
+    def issued(client):
+        """Documentos emitidos en la app (todos los estados, incluidos borrador y anulado)."""
+        return Document.all_objects.filter(client=client, source="app", is_current=True)
 
     @staticmethod
     def archived(client):

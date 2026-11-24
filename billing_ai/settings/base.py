@@ -237,3 +237,23 @@ AUTH_USER_MODEL = "clients.CustomUser"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+# --- Email (envío de facturas y presupuestos) ----------------------------------
+# Sin EMAIL_HOST se usa el backend de consola: en producción define EMAIL_HOST o los emails no salen.
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST else "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "30"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "FacturIA <no-reply@localhost>")
+EMAIL_MAX_RETRIES = int(os.getenv("EMAIL_MAX_RETRIES", "3"))
+EMAIL_RETRY_BASE_SECONDS = int(os.getenv("EMAIL_RETRY_BASE_SECONDS", "60"))
+
+# URL pública de la app (enlaces de presupuestos en emails y «compartir enlace»)
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000").rstrip("/")
+PUBLIC_RESPONSE_LIMIT_PER_HOUR = int(os.getenv("PUBLIC_RESPONSE_LIMIT_PER_HOUR", "30"))

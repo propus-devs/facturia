@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load ui static %}
+{% block title %}{% if document %}Editar borrador{% else %}{{ cfg.new_label }}{% endif %} - FacturIA{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'css/list-page.css' %}">
+  <link rel="stylesheet" href="{% static 'css/form-page.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="form-head">
+  <a class="btn btn-ghost btn-sm btn-back" href="{% if document %}{% url 'sales:detail' document.pk %}{% else %}{% url cfg.list_url %}{% endif %}">{% icon "back" %} Volver</a>
+  <h1 class="form-page-title">{% if is_quote_kind %}{% icon "quote" %}{% else %}{% icon "sales" %}{% endif %}
+    {% if document %}Editar borrador{% if document.document_number %} · {{ document.document_number }}{% endif %}{% else %}{{ cfg.new_label }}{% endif %}</h1>
+</header>
+
+<form method="post" id="issued-form" class="form-card sales-form" novalidate>
+  {% csrf_token %}
+  {% for e in form.non_field_errors %}<p class="form-error" role="alert">{{ e }}</p>{% endfor %}
+  {% if rectifies %}<p class="help-note" role="note">Rectifica la factura <a href="{% url 'sales:detail' rectifies.pk %}">{{ rectifies.document_number }}</a>{% if document.rectification_reason %} · Motivo: {{ document.rectification_reason }}{% endif %}. Los importes de esta rectificativa se restan de la original; ajusta las líneas para rectificar solo una parte.</p>{% endif %}
+  {% for e in formset.non_form_errors %}<p class="form-error" role="alert">{{ e }}</p>{% endfor %}
+
+  <fieldset class="form-section">
+    <legend>{% icon "document" %} Datos fiscales</legend>
+    <div class="form-grid-2">
+      {% include "components/field.html" with field=form.document_type %}
+      <div class="fld{% if form.company.errors %} has-error{% endif %}">
+        <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>
+        <div class="contact-row">
+          {{ form.company }}
+          <button type="button" class="btn" data-dialog-open="contact-dialog">{% icon "new" %} Añadir</button>
+        </div>
+        {% if form.company.errors %}<ul class="fld-errors">{% for e in form.company.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      </div>
+      <div class="fld">
+        <span class="fld-label">Número</span>
+        <p class="static-value">{% if document.document_number %}{{ document.document_number }}{% elif is_quote_kind %}Se asignará al guardar o emitir{% else %}Se asignará al emitir{% endif %}</p>
+      </div>
+      {% include "components/field.html" with field=form.issue_date %}
+      {% if is_quote_kind %}
+        {% include "components/field.html" with field=form.valid_until %}
+      {% else %}
+        {% include "components/field.html" with field=form.due_date %}
+      {% endif %}
+    </div>
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend>{% icon "list" %} Conceptos</legend>
+    {{ formset.management_form }}
+    <div class="lines" id="lines" data-prefix="{{ formset.prefix }}">
+      <div class="line-head" aria-hidden="true">
+        <span>Concepto</span><span>Cant.</span><span>Precio</span><span>IVA %</span><span>Dto. %</span><span></span>
+      </div>
+      <div id="lines-body">
+        {% for f in formset %}
+        <div class="line-row{% if f.errors %} has-error{% endif %}">
+          {% for e in f.non_field_errors %}<p class="form-error line-error">{{ e }}</p>{% endfor %}
+          <div class="line-cell line-desc"><label for="{{ f.description.id_for_label }}">Concepto</label>{{ f.description }}</div>
+          <div class="line-cell"><label for="{{ f.quantity.id_for_label }}">Cantidad</label>{{ f.quantity }}</div>
+          <div class="line-cell"><label for="{{ f.unit_price.id_for_label }}">Precio</label>{{ f.unit_price }}</div>
+          <div class="line-cell"><label for="{{ f.tax_rate.id_for_label }}">IVA %</label>{{ f.tax_rate }}</div>
+          <div class="line-cell"><label for="{{ f.discount_pct.id_for_label }}">Dto. %</label>{{ f.discount_pct }}</div>
+          <button type="button" class="btn btn-ghost btn-sm line-remove" data-line-remove aria-label="Quitar línea" title="Quitar línea">{% icon "delete" %}</button>
+          {% for field in f %}{% if field.errors %}<ul class="fld-errors line-error">{% for e in field.errors %}<li>{{ field.label }}: {{ e }}</li>{% endfor %}</ul>{% endif %}{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div><button type="button" class="btn" id="line-add">{% icon "new" %} Añadir línea</button></div>
+
+    <dl class="totals" id="totals" aria-live="polite">
+      <div><dt>Base imponible</dt><dd data-total="base">0,00 €</dd></div>
+      <div data-row="discount" hidden><dt>Descuento global</dt><dd data-total="discount">0,00 €</dd></div>
+      <div id="totals-vat"></div>
+      <div data-row="surcharge" hidden><dt>Recargo de equivalencia</dt><dd data-total="surcharge">0,00 €</dd></div>
+      <div data-row="withholding" hidden><dt>Retención IRPF</dt><dd data-total="withholding">0,00 €</dd></div>
+      <div class="totals-final"><dt>Total</dt><dd data-total="total">0,00 €</dd></div>
+    </dl>
+    <p class="help-note">Cálculo orientativo; el importe definitivo lo fija el servidor al guardar.</p>
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend>{% icon "categories" %} Pago y categorización</legend>
+    <div class="form-grid-2">
+      {% include "components/field.html" with field=form.payment_method %}
+      {% if form.category.field.queryset %}{% include "components/field.html" with field=form.category %}{% endif %}
+      {% include "components/field.html" with field=form.global_discount_pct %}
+      {% include "components/field.html" with field=form.withholding_pct %}
+    </div>
+    {% if form.tags.field.queryset %}{% include "components/field.html" with field=form.tags %}{% endif %}
+    {% include "components/field.html" with field=form.notes %}
+    <div class="fld{% if form.apply_surcharge.errors %} has-error{% endif %}">
+      <label class="check" for="{{ form.apply_surcharge.id_for_label }}">{{ form.apply_surcharge }} {{ form.apply_surcharge.label }}</label>
+    </div>
+  </fieldset>
+
+  <div class="form-actions">
+    {% if document %}<a class="btn btn-ghost" href="{% url 'sales:pdf' document.pk %}" target="_blank" rel="noopener">{% icon "external" %} Vista previa</a>{% endif %}
+    <a class="btn btn-ghost" href="{% if document %}{% url 'sales:detail' document.pk %}{% else %}{% url cfg.list_url %}{% endif %}">Cancelar</a>
+    <button type="submit" name="action" value="save" class="btn btn-info">{% icon "save" %} Guardar borrador</button>
+    <button type="button" class="btn btn-success" data-dialog-open="approve-dialog">{% icon "approve" %} Emitir</button>
+  </div>
+</form>
+
+<template id="line-template">
+  <div class="line-row">
+    <div class="line-cell line-desc"><label for="id_{{ formset.prefix }}-__prefix__-description">Concepto</label>{{ formset.empty_form.description }}</div>
+    <div class="line-cell"><label for="id_{{ formset.prefix }}-__prefix__-quantity">Cantidad</label>{{ formset.empty_form.quantity }}</div>
+    <div class="line-cell"><label for="id_{{ formset.prefix }}-__prefix__-unit_price">Precio</label>{{ formset.empty_form.unit_price }}</div>
+    <div class="line-cell"><label for="id_{{ formset.prefix }}-__prefix__-tax_rate">IVA %</label>{{ formset.empty_form.tax_rate }}</div>
+    <div class="line-cell"><label for="id_{{ formset.prefix }}-__prefix__-discount_pct">Dto. %</label>{{ formset.empty_form.discount_pct }}</div>
+    <button type="button" class="btn btn-ghost btn-sm line-remove" data-line-remove aria-label="Quitar línea" title="Quitar línea">{% icon "delete" %}</button>
+  </div>
+</template>
+
+<dialog class="dialog dialog-form" id="approve-dialog" aria-labelledby="approve-title">
+  <div class="dialog-icon tone-warning">{% icon "warning" %}</div>
+  <h3 id="approve-title">¿Emitir {% if is_quote_kind %}el presupuesto{% else %}la factura{% endif %}?</h3>
+  <p>Quedará cerrada y <strong>no se podrá modificar</strong>. Se le asignará su número definitivo.</p>
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+    <button type="submit" form="issued-form" name="action" value="approve" class="btn btn-success">{% icon "approve" %} Emitir</button>
+  </div>
+</dialog>
+
+<dialog class="dialog dialog-form" id="contact-dialog" aria-labelledby="contact-title" data-url="{% url 'sales:contact_create' %}">
+  <form id="contact-form" novalidate>
+    {% csrf_token %}
+    <h3 id="contact-title">Nuevo contacto</h3>
+    <div class="fld"><label for="contact-name">Nombre</label><input type="text" id="contact-name" name="name" maxlength="255" required></div>
+    <div class="fld"><label for="contact-tax-id">NIF</label><input type="text" id="contact-tax-id" name="tax_id" maxlength="50"></div>
+    <div class="fld"><label for="contact-email">Email</label><input type="email" id="contact-email" name="email"></div>
+    <p class="form-error" id="contact-error" role="alert" hidden></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-dialog-close>Cancelar</button>
+      <button type="submit" class="btn btn-primary">{% icon "save" %} Guardar</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/sales-shortcut.js' %}"></script>
+<script src="{% static 'js/issued-form.js' %}"></script>
+{% endblock %}

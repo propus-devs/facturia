@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load ui static %}
+{% block title %}{{ cfg.title }} - FacturIA{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'css/list-page.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sales-page" data-new-url="{% url cfg.new_url %}">
+  <header class="sales-head">
+    <h1 class="page-title">{% if kind == 'facturas' %}{% icon "sales" %}{% else %}{% icon "quote" %}{% endif %} {{ cfg.title }}</h1>
+    <div class="sales-head-actions">
+      <a href="{% url 'sales:settings' %}" class="btn btn-ghost">{% icon "settings" %} <span>Ajustes de facturación</span></a>
+      <a href="{% url cfg.new_url %}" class="btn btn-primary" title="Atajo: N">{% icon "new" %} {{ cfg.new_label }}</a>
+    </div>
+  </header>
+
+  <nav class="status-tabs kind-tabs" aria-label="Tipo de documento">
+    <a class="status-tab{% if kind == 'facturas' %} active{% endif %}" href="{% url 'sales:invoices' %}"{% if kind == 'facturas' %} aria-current="page"{% endif %}>Facturas</a>
+    <a class="status-tab{% if kind == 'presupuestos' %} active{% endif %}" href="{% url 'sales:quotes' %}"{% if kind == 'presupuestos' %} aria-current="page"{% endif %}>Presupuestos</a>
+  </nav>
+
+  <form method="get" class="filter-card">
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    <div class="filter-top">
+      <div class="search-group">
+        <div class="search-field">
+          {% icon "search" %}
+          <input type="search" name="q" value="{{ q }}" placeholder="Número o contacto" aria-label="Buscar por número o contacto">
+        </div>
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </div>
+      <nav class="status-tabs" aria-label="Estado">
+        {% for value, label in status_tabs %}
+          <a class="status-tab{% if value == status %} active{% endif %}" href="?{% if value %}status={{ value }}{% endif %}{% if q %}{% if value %}&amp;{% endif %}q={{ q|urlencode }}{% endif %}">{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </form>
+
+  {% if documents %}
+  <div class="table-wrapper">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Número</th><th>Contacto</th><th class="hide-sm">Tipo</th><th class="hide-sm">Fecha</th>
+          <th class="num">Total</th><th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in documents %}
+        <tr>
+          <td><a href="{% url 'sales:detail' d.pk %}">{{ d.document_number|default:"Sin número" }}</a></td>
+          <td class="cell-wrap">{{ d.company.name|default:"—" }}</td>
+          <td class="hide-sm muted">{{ d.get_document_type_display }}</td>
+          <td class="hide-sm muted">{{ d.issue_date|date:"d/m/Y"|default:"—" }}</td>
+          <td class="num">{{ d.total_amount|default_if_none:"—" }}{% if d.total_amount is not None %} €{% endif %}</td>
+          <td>{% badge "issued" d.status %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if page_obj.has_other_pages %}
+    <div class="table-footer-bar">
+      <span class="results-count">Página <strong>{{ page_obj.number }}</strong> de {{ page_obj.paginator.num_pages }}</span>
+      <div class="pager">
+        {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if status %}&amp;status={{ status }}{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" aria-label="Página anterior">{% icon "back" %}</a>{% else %}<span class="page disabled">{% icon "back" %}</span>{% endif %}
+        {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if status %}&amp;status={{ status }}{% endif %}{% if q %}&amp;q={{ q|urlencode }}{% endif %}" aria-label="Página siguiente">{% icon "next" %}</a>{% else %}<span class="page disabled">{% icon "next" %}</span>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="sales-empty">
+    {% icon "document" %}
+    <p>{% if q or status %}Ningún resultado con estos filtros.{% else %}Todavía no hay {% if kind == 'facturas' %}facturas{% else %}presupuestos{% endif %}.{% endif %}</p>
+    <a href="{% url cfg.new_url %}" class="btn btn-primary">{% icon "new" %} {{ cfg.new_label }}</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{% static 'js/sales-shortcut.js' %}"></script>
+{% endblock %}

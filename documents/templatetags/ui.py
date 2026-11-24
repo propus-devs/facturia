@@ -56,6 +56,13 @@ ICONS = {
     "menu": "fa-solid fa-bars",
     "collapse": "fa-solid fa-angles-left",
     "logout": "fa-solid fa-right-from-bracket",
+    "sales": "fa-solid fa-file-invoice-dollar",
+    "quote": "fa-solid fa-file-signature",
+    "settings": "fa-solid fa-gear",
+    "pdf": "fa-regular fa-file-pdf",
+    "void": "fa-solid fa-ban",
+    "send": "fa-solid fa-paper-plane",
+    "external": "fa-solid fa-arrow-up-right-from-square",
 }
 
 # --- Badges: (icono, tono, etiqueta) -------------------------------------------
@@ -65,6 +72,11 @@ BADGES = {
         "approved": ("fa-solid fa-circle-check", "success", "Aprobado"),
         "rejected": ("fa-solid fa-circle-xmark", "danger", "Rechazado"),
         "archived": ("fa-solid fa-box-archive", "neutral", "Archivado"),
+    },
+    "issued": {
+        "draft": ("fa-solid fa-pencil", "neutral", "Borrador"),
+        "approved": ("fa-solid fa-circle-check", "success", "Emitida"),
+        "voided": ("fa-solid fa-ban", "danger", "Anulada"),
     },
     "review": {
         "auto": ("fa-solid fa-robot", "success", "Auto"),

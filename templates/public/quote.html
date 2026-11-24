@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load ui static %}
+{% block title %}Presupuesto {{ document.document_number }} - {{ issuer.name|default:"FacturIA" }}{% endblock %}
+{% block styles %}
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="{% static 'css/sales/public-quote.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="pq">
+  {% if error %}<p class="pq-banner tone-danger" role="alert">{{ error }}</p>{% endif %}
+  {% if result == 'accepted' %}<p class="pq-banner tone-success" role="status">{% icon "approve" %} Has aceptado el presupuesto. Gracias, nos pondremos en contacto contigo.</p>
+  {% elif result == 'declined' %}<p class="pq-banner tone-warning" role="status">Has rechazado el presupuesto. Hemos avisado al emisor.</p>
+  {% elif result == 'commented' %}<p class="pq-banner tone-info" role="status">Hemos enviado tu comentario al emisor.</p>{% endif %}
+
+  <header class="pq-card pq-head">
+    <p class="pq-issuer"><strong>{{ issuer.name }}</strong>
+      {% if issuer.tax_id %}{{ issuer.tax_id }}<br>{% endif %}
+      {% if issuer.address %}{{ issuer.address }}{% endif %}{% if issuer.postal_code or issuer.city %}, {{ issuer.postal_code }} {{ issuer.city }}{% endif %}
+      {% if issuer.email %}<br>{{ issuer.email }}{% endif %}</p>
+    <div class="pq-title">
+      <h1>Presupuesto {{ document.document_number }}</h1>
+      {% if quote_status == 'accepted' %}<span class="badge-status tone-success">Aceptado</span>
+      {% elif quote_status == 'declined' %}<span class="badge-status tone-danger">Rechazado</span>
+      {% elif quote_status == 'converted' %}<span class="badge-status tone-success">Aceptado y facturado</span>
+      {% elif expired %}<span class="badge-status tone-warning">Caducado</span>{% endif %}
+    </div>
+    <dl class="pq-meta">
+      <div><dt>Fecha</dt><dd>{{ document.issue_date|date:"d/m/Y" }}</dd></div>
+      {% if issued.valid_until %}<div><dt>Válido hasta</dt><dd>{{ issued.valid_until|date:"d/m/Y" }}</dd></div>{% endif %}
+      {% if issued.payment_method %}<div><dt>Forma de pago</dt><dd>{{ issued.get_payment_method_display }}</dd></div>{% endif %}
+    </dl>
+  </header>
+
+  <section class="pq-card" aria-labelledby="pq-for">
+    <h2 id="pq-for">Para</h2>
+    <address class="pq-party"><strong>{{ recipient.name }}</strong>
+      {% if recipient.tax_id %}{{ recipient.tax_id }}<br>{% endif %}
+      {% if recipient.address %}{{ recipient.address }}{% endif %}{% if recipient.postal_code or recipient.city %}, {{ recipient.postal_code }} {{ recipient.city }}{% endif %}
+      {% if recipient.email %}<br>{{ recipient.email }}{% endif %}</address>
+  </section>
+
+  <section class="pq-card" aria-labelledby="pq-lines">
+    <h2 id="pq-lines">Detalle</h2>
+    <div class="table-wrapper">
+      <table class="table pq-lines">
+        <thead><tr><th scope="col">Concepto</th><th scope="col" class="num">Cant.</th><th scope="col" class="num">Precio</th><th scope="col" class="num">Dto.</th><th scope="col" class="num">IVA</th><th scope="col" class="num">Importe</th></tr></thead>
+        <tbody>
+          {% for l in lines %}
+          <tr>
+            <td class="desc">{{ l.description }}</td>
+            <td class="num">{{ l.quantity|default_if_none:"" }}</td>
+            <td class="num">{{ l.unit_price|default_if_none:"" }} €</td>
+            <td class="num">{% if l.discount_pct %}{{ l.discount_pct }} %{% endif %}</td>
+            <td class="num">{% if l.tax_rate is not None %}{{ l.tax_rate }} %{% endif %}</td>
+            <td class="num">{{ l.amount|default_if_none:"" }} €</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <dl class="pq-totals">
+      <div><dt>Base imponible</dt><dd>{{ document.base_amount|default_if_none:"—" }}{% if document.base_amount is not None %} €{% endif %}</dd></div>
+      {% for t in vat_lines %}<div><dt>IVA {{ t.rate }} % <small>sobre {{ t.base }} €</small></dt><dd>{{ t.amount }} €</dd></div>{% endfor %}
+      {% for t in surcharge_lines %}<div><dt>Recargo {{ t.rate }} %</dt><dd>{{ t.amount }} €</dd></div>{% endfor %}
+      {% for t in withholding_lines %}<div><dt>Retención {{ t.rate }} %</dt><dd>-{{ t.amount }} €</dd></div>{% endfor %}
+      <div class="pq-total"><dt>Total</dt><dd>{{ document.total_amount|default_if_none:"—" }}{% if document.total_amount is not None %} €{% endif %}</dd></div>
+    </dl>
+    {% if issued.notes %}<p class="pq-notes">{{ issued.notes|linebreaksbr }}</p>{% endif %}
+  </section>
+
+  <section class="pq-card pq-pdf" aria-labelledby="pq-pdf">
+    <h2 id="pq-pdf">Documento PDF</h2>
+    <div class="pq-pdf-actions">
+      <a class="btn btn-sm" href="{% url 'public_quote_pdf' token %}" target="_blank" rel="noopener">{% icon "document" %} Ver PDF</a>
+      <a class="btn btn-sm" href="{% url 'public_quote_pdf' token %}?download=1">{% icon "download" %} Descargar</a>
+    </div>
+    <iframe src="{% url 'public_quote_pdf' token %}" title="PDF del presupuesto {{ document.document_number }}"></iframe>
+  </section>
+
+  {% if can_respond %}
+  <section class="pq-card" aria-labelledby="pq-respond">
+    <h2 id="pq-respond">Tu respuesta</h2>
+    <form method="post" class="pq-form">
+      {% csrf_token %}
+      <div class="fld">
+        <label for="pq-comment">Comentario (opcional)</label>
+        <textarea id="pq-comment" name="comment" rows="4" maxlength="2000" placeholder="¿Algo que quieras indicarnos?"></textarea>
+      </div>
+      <div class="pq-actions">
+        <button type="submit" name="action" value="accept" class="btn btn-success">{% icon "approve" %} Aceptar presupuesto</button>
+        <button type="submit" name="action" value="decline" class="btn btn-danger">Rechazar</button>
+        <button type="submit" name="action" value="comment" class="btn">Enviar solo comentario</button>
+      </div>
+    </form>
+  </section>
+  {% elif expired %}
+  <p class="pq-banner tone-warning" role="status">Este presupuesto ha caducado el {{ issued.valid_until|date:"d/m/Y" }}.</p>
+  {% elif quote_status == 'accepted' %}
+  <p class="pq-banner tone-success" role="status">Aceptado.</p>
+  {% elif quote_status == 'declined' %}
+  <p class="pq-banner tone-danger" role="status">Rechazado.</p>
+  {% elif quote_status == 'converted' %}
+  <p class="pq-banner tone-success" role="status">Aceptado y facturado.</p>
+  {% endif %}
+</div>
+{% endblock %}

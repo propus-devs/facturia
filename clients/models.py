@@ -83,3 +83,37 @@ def validate_roles_client(sender, instance, action, reverse, model, pk_set, **kw
                 raise ValidationError(
                     f"Role '{role}' does not belong to the same client as the user '{instance.username}'."
                 )
+
+
+class BillingSettings(models.Model):
+    """Preferencias de facturación del cliente (datos del emisor, vencimientos, email)."""
+    PAYMENT_METHOD_CHOICES = [
+        ("transfer", "Transferencia"),
+        ("card", "Tarjeta"),
+        ("cash", "Efectivo"),
+        ("direct_debit", "Domiciliación"),
+        ("other", "Otro"),
+    ]
+
+    client = models.OneToOneField(Client, on_delete=models.CASCADE, related_name="billing_settings")
+    address = models.CharField("Dirección fiscal", max_length=255, blank=True, default="")
+    postal_code = models.CharField("Código postal", max_length=20, blank=True, default="")
+    city = models.CharField("Localidad", max_length=100, blank=True, default="")
+    email = models.EmailField("Email de envío", blank=True, default="")
+    iban = models.CharField("IBAN", max_length=34, blank=True, default="")
+    default_payment_days = models.PositiveSmallIntegerField("Días de vencimiento", default=30)
+    default_payment_method = models.CharField(
+        "Forma de pago", max_length=15, choices=PAYMENT_METHOD_CHOICES, default="transfer"
+    )
+    quote_validity_days = models.PositiveSmallIntegerField("Validez del presupuesto (días)", default=30)
+    footer_notes = models.TextField("Pie del documento", blank=True, default="")
+    email_subject = models.CharField(
+        "Asunto del email", max_length=255, blank=True, default="{tipo} {numero} de {empresa}"
+    )
+    email_body = models.TextField(
+        "Cuerpo del email", blank=True,
+        default="Hola,\n\nAdjuntamos {tipo} {numero} por importe de {total}.\n\nUn saludo,\n{empresa}",
+    )
+
+    def __str__(self):
+        return f"Facturación de {self.client}"

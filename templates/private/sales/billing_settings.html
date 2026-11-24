@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load ui static %}
+{% block title %}Ajustes de facturación - FacturIA{% endblock %}
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'css/form-page.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="form-head">
+  <a class="btn btn-ghost btn-sm btn-back" href="{% url 'sales:invoices' %}">{% icon "back" %} Volver a facturas</a>
+  <h1 class="form-page-title">{% icon "settings" %} Ajustes de facturación</h1>
+  <p class="form-subtitle">Datos que aparecen en tus facturas y presupuestos.</p>
+</header>
+
+<form method="post" class="form-card sales-settings" novalidate>
+  {% csrf_token %}
+  {% for e in form.non_field_errors %}<p class="form-error" role="alert">{{ e }}</p>{% endfor %}
+
+  <fieldset class="form-section">
+    <legend>{% icon "clients" %} Datos del emisor</legend>
+    {% include "components/field.html" with field=form.address %}
+    <div class="form-grid-2">
+      {% include "components/field.html" with field=form.postal_code %}
+      {% include "components/field.html" with field=form.city %}
+      {% include "components/field.html" with field=form.email %}
+      {% include "components/field.html" with field=form.iban %}
+    </div>
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend>{% icon "balance" %} Pagos y vencimientos</legend>
+    <div class="form-grid-2">
+      {% include "components/field.html" with field=form.default_payment_days %}
+      {% include "components/field.html" with field=form.default_payment_method %}
+      {% include "components/field.html" with field=form.quote_validity_days %}
+    </div>
+    {% include "components/field.html" with field=form.footer_notes %}
+  </fieldset>
+
+  <fieldset class="form-section">
+    <legend>{% icon "document" %} Plantilla del email</legend>
+    <p class="help-note">Marcadores disponibles: <code>{tipo}</code> <code>{numero}</code> <code>{empresa}</code> <code>{total}</code></p>
+    {% include "components/field.html" with field=form.email_subject %}
+    {% include "components/field.html" with field=form.email_body %}
+  </fieldset>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{% url 'sales:invoices' %}">Cancelar</a>
+    <button type="submit" class="btn btn-primary">{% icon "save" %} Guardar</button>
+  </div>
+</form>
+{% endblock %}

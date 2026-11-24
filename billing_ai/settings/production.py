@@ -57,3 +57,10 @@ STORAGES = {
 # Archivos subidos: ver STORAGES en base.py (Cloudflare R2). En producción
 # las credenciales R2_* son obligatorias.
 assert _use_r2, "Faltan variables R2_* para el almacenamiento de documentos"
+
+# Email y enlaces públicos: sin esto los envíos «funcionan» en el panel pero no salen del servidor
+# y los enlaces de presupuestos apuntan a localhost.
+from .checks import email_config_problems  # noqa: E402
+
+_email_problems = email_config_problems(EMAIL_HOST, os.environ.get("EMAIL_BACKEND", ""), PUBLIC_BASE_URL)
+assert not _email_problems, " ".join(_email_problems)

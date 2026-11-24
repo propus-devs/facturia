@@ -165,6 +165,10 @@ class DocumentDetailView(LoginRequiredMixin, DetailView):
         if action == "unarchive" and self.object.is_archived:
             return unarchive_document(request, self.object)
         
+        if action == "rectify" and self.object.is_issued:
+            messages.info(request, "Un documento emitido se rectifica desde Ventas.")
+            return redirect("sales:detail", pk=self.object.pk)
+
         if action == "rectify" and self.object.status in ["approved", "rejected"] and not self.object.is_archived:
             return redirect("documents:rectify", pk=self.object.pk)
 
@@ -539,6 +543,10 @@ class DocumentRectifyView(LoginRequiredMixin, FormView):
             DocumentSelector.detail_queryset(request.user.client),
             pk=kwargs.get("pk")
         )
+
+        if self.document.is_issued:
+            messages.info(request, "Un documento emitido se rectifica desde Ventas.")
+            return redirect("sales:detail", pk=self.document.pk)
 
         if self.document.status not in ["approved", "rejected"] or self.document.is_archived:
             messages.warning(request, "Este documento no puede ser rectificado.")

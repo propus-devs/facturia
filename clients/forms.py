@@ -1,7 +1,7 @@
 from datetime import date
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
-from clients.models import Client, CustomUser
+from clients.models import BillingSettings, Client, CustomUser
 
 
 class ClientProfileForm(forms.ModelForm):
@@ -91,3 +91,13 @@ class ClientInfoForm(forms.ModelForm):
         if n is not None and n > 1_000_000:
             raise forms.ValidationError('Número de empleados no válido.')
         return n
+
+
+class BillingSettingsForm(forms.ModelForm):
+    class Meta:
+        model = BillingSettings
+        exclude = ["client"]
+        widgets = {
+            "footer_notes": forms.Textarea(attrs={"rows": 3}),
+            "email_body": forms.Textarea(attrs={"rows": 6}),
+        }

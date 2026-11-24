@@ -129,11 +129,11 @@ class TestTree:
         base = f"compras/2026/T1/{supplier.pk}/"
         assert leaf_ids(client_entity, base + "abonos/") == {docs["corrected_invoice"].pk, docs["delivery_credit_note"].pk}
         assert leaf_ids(client_entity, base + "tickets/") == {docs["receipt"].pk}
-        assert leaf_ids(client_entity, base + "presupuestos/") == {docs["quote"].pk}
+        assert leaf_ids(client_entity, base + "presupuestos/") == {docs["quote"].pk, docs["proforma"].pk}
         assert leaf_ids(client_entity, base + "albaranes/") == {docs["delivery"].pk}
         groups = DriveSelector.children(client_entity, DrivePath.parse(base))
         assert names(groups) == ["Facturas", "Albaranes", "Abonos", "Tickets", "Presupuestos"]
-        assert [g.count for g in groups] == [1, 1, 2, 1, 1]
+        assert [g.count for g in groups] == [1, 1, 2, 1, 2]
 
     def test_unknown_type_falls_into_otros(self, client_entity, supplier):
         doc = make_doc(client_entity, supplier)

@@ -42,6 +42,12 @@
       <a href="{% url 'documents:drive' %}" title="Archivo" aria-label="Archivo" {% if page == 'drive' %}class="active" aria-current="page"{% endif %}>
         {% icon "drive" %}<span class="nav-label">Archivo</span></a>
 
+      <p class="nav-group" aria-hidden="true"><span class="nav-label">Ventas</span></p>
+      <a href="{% url 'sales:invoices' %}" title="Facturas" aria-label="Facturas" {% if ns == 'sales' and page != 'quotes' and page != 'quote_new' %}class="active" aria-current="page"{% endif %}>
+        {% icon "sales" %}<span class="nav-label">Facturas</span></a>
+      <a href="{% url 'sales:quotes' %}" title="Presupuestos" aria-label="Presupuestos" {% if ns == 'sales' and page == 'quotes' or ns == 'sales' and page == 'quote_new' %}class="active" aria-current="page"{% endif %}>
+        {% icon "quote" %}<span class="nav-label">Presupuestos</span></a>
+
       <p class="nav-group" aria-hidden="true"><span class="nav-label">Finanzas</span></p>
       <a href="{% url 'finance:movements' %}" title="Movimientos" aria-label="Movimientos" {% if ns == 'finance' and page != 'categories' and 'category' not in page %}class="active" aria-current="page"{% endif %}>
         {% icon "movements" %}<span class="nav-label">Movimientos</span></a>

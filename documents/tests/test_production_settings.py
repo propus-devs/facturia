@@ -10,6 +10,7 @@ BASE_ENV = {
     "DJANGO_SETTINGS_MODULE": "billing_ai.settings.production",
     "SECRET_KEY": "x",
     "POSTGRES_DB": "d", "POSTGRES_USER": "u", "POSTGRES_PASSWORD": "p", "POSTGRES_HOST": "pg",
+    "EMAIL_HOST": "smtp.example.com", "PUBLIC_BASE_URL": "https://app.example.com",
 }
 R2 = {"R2_BUCKET_NAME": "b", "R2_ENDPOINT_URL": "https://x.r2.cloudflarestorage.com",
       "R2_ACCESS_KEY_ID": "a", "R2_SECRET_ACCESS_KEY": "s"}
@@ -40,3 +41,11 @@ def test_csrf_origins_follow_allowed_hosts():
     r = subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr[-400:]
     assert r.stdout.strip() == str(["https://a.com", "https://*.b.com", "https://web.easypanel.host", "https://extra.io"])
+
+
+def test_production_requires_smtp_and_public_url():
+    no_smtp = run({**R2, "EMAIL_HOST": ""})
+    assert no_smtp.returncode != 0 and "EMAIL_HOST" in no_smtp.stderr
+    local_url = run({**R2, "PUBLIC_BASE_URL": "http://localhost:8000"})
+    assert local_url.returncode != 0 and "PUBLIC_BASE_URL" in local_url.stderr
+    assert run({**R2, "EMAIL_HOST": "", "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend"}).returncode == 0

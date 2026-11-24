@@ -23,6 +23,11 @@ DATABASES = {
 
 # Dentro de Docker la IP del navegador no es 127.0.0.1, así que INTERNAL_IPS
 # no sirve: mostramos la debug toolbar siempre que DEBUG esté activo.
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": lambda request: DEBUG,
-}
+def _show_toolbar(request):
+    # Se lee en cada petición: pytest-django fuerza DEBUG=False, y entonces las URLs de la barra
+    # no se registran (urls.py) y mostrarla rompería con NoReverseMatch ('djdt').
+    from django.conf import settings
+    return settings.DEBUG
+
+
+DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": _show_toolbar}
