@@ -62,7 +62,7 @@
       <p class="nav-group" aria-hidden="true"><span class="nav-label">Administración</span></p>
       <a href="{% url 'admin:index' %}" title="Admin" aria-label="Admin">
         {% icon "admin" %}<span class="nav-label">Admin</span></a>
-      <a href="{% url 'metrics' %}#client-usage" title="Uso por cliente" aria-label="Uso por cliente">
+      <a href="{% url 'client_usage' %}" title="Uso por cliente" aria-label="Uso por cliente" {% if page == 'client_usage' %}class="active" aria-current="page"{% endif %}>
         {% icon "clients" %}<span class="nav-label">Uso por cliente</span></a>
       {% endif %}
     </nav>

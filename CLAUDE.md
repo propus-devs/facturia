@@ -75,6 +75,7 @@ Subida (upload.py) ─ valida tamaño + tipo real (firma, no extensión) ─ dup
 - **Terceros** (`services/companies.py`): `get_or_create_company` evita duplicados por NIF canónico (sin `ES`, guiones, etc.) o por `name_key` (sin tildes, puntuación ni forma jurídica). `manage.py merge_companies` fusiona los ya duplicados.
 - **Organización** (`services/organization.py`): tipo, tercero, categoría (`DocumentCategory`, distinta de `MovementCategory`), carpeta virtual y etiquetas; todo se resuelve contra el cliente del documento (un id de otro tenant se ignora).
 - **Registro**: una línea por documento (`document= client= outcome= tokens cost`), solo ids. `services/usage.py` agrega tokens/coste.
+- **Uso por cliente** (`/metrics/clientes/`, `client_usage`, `ClientUsageView`): solo superusuarios (el resto, 404); cruza tenants a propósito. `services/client_overview.py`: tabla ordenable por cliente (documentos, confianza, % baja confianza, auto-aprobados, fallos, respaldo a Sonnet, coste) y rankings (más documentos, más coste de extracción, menor confianza). Por `created_at`. **No debe mostrar datos contables del cliente** (importes, gasto, ingresos): solo uso de la plataforma.
 - **Retención/RGPD**: `services/retention.py`, `DOCUMENT_RETENTION_YEARS` (10, provisional); una cadena de rectificaciones se conserva hasta que caducan todas sus versiones.
 
 ### Reglas al tocar esto

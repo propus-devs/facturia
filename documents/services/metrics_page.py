@@ -150,3 +150,18 @@ def build_page(metrics: dict, historical: dict, period: dict, previous: dict | N
         "chart_data": chart_data,
         "presets": [],
     }
+
+
+def parse_period(params, today: date) -> tuple[date, date]:
+    """Periodo `?start=&end=` (por defecto, el mes en curso); fechas inválidas o invertidas se corrigen."""
+    from django.utils.dateparse import parse_date
+
+    def _date(value, default):
+        try:
+            return parse_date(value or "") or default
+        except ValueError:
+            return default
+
+    start = _date(params.get("start"), today.replace(day=1))
+    end = _date(params.get("end"), today)
+    return (end, start) if start > end else (start, end)

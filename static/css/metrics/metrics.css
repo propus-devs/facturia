@@ -121,8 +121,3 @@
 .history strong { color: var(--body-fg-color); }
 .history-label { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--body-fg-color); font-weight: 600; }
 .history .badge-status, .history .muted:last-child { margin-left: auto; }
-
-/* Uso por cliente (superusuarios) */
-.client-usage { margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--border-color); }
-.client-usage-title { margin: 0 0 0.6rem; font-size: 0.95rem; font-weight: 600; }
-.client-usage .bar { min-width: 80px; }

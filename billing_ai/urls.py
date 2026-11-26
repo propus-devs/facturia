@@ -7,7 +7,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.templatetags.static import static
 from django.views.decorators.cache import cache_control
-from documents.views import DashboardView, MetricsDashboardView
+from documents.views import ClientUsageView, DashboardView, MetricsDashboardView
 
 
 @cache_control(max_age=86400, public=True)
@@ -46,6 +46,7 @@ urlpatterns = [
     path('p/<str:token>/', PublicQuoteView.as_view(), name='public_quote'),
     path('p/<str:token>/pdf/', PublicQuotePDFView.as_view(), name='public_quote_pdf'),
     path('metrics/dashboard/', MetricsDashboardView.as_view(), name='metrics'),
+    path('metrics/clientes/', ClientUsageView.as_view(), name='client_usage'),
     path('finance/', include("finance.urls")),
     path('clients/', include("clients.urls")),
 ]

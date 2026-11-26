@@ -17,8 +17,8 @@ from .selectors import drive_selector as drive
 from .selectors.document_selector import DocumentSelector
 from .services import DocumentService
 from .services.dashboard_service import DashboardService
-from .services.usage import usage_by_client
-from .services.metrics_page import build_page, presets, previous_period
+from .services.client_overview import client_overview
+from .services.metrics_page import build_page, parse_period, presets, previous_period
 from datetime import date
 from django.contrib.auth import get_user_model
 from .filters.document_filters import get_filtered_documents, get_exportable_documents
@@ -462,20 +462,8 @@ class MetricsDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "private/metrics/dashboard.html"
 
     def get_dashboard_metrics(self, request):
-        start = request.GET.get("start")
-        end = request.GET.get("end")
         today = timezone.now().date()
-
-        def _date(value, default):
-            try:
-                return parse_date(value or "") or default
-            except ValueError:
-                return default
-
-        start = _date(start, today.replace(day=1))
-        end = _date(end, today)
-        if start > end:
-            start, end = end, start
+        start, end = parse_period(request.GET, today)
 
         first_day_of_month = today.replace(day=1)
         is_current_month = (
@@ -519,9 +507,6 @@ class MetricsDashboardView(LoginRequiredMixin, TemplateView):
 
         # Presentación: héroe, desglose por origen, IVA, embudo, automatización, gráficos
         start, end = metrics["period"]["start"], metrics["period"]["end"]
-        # Uso por cliente: datos de todos los tenants, solo para superusuarios.
-        if self.request.user.is_superuser:
-            context["client_usage"] = usage_by_client(start, end)
         previous = None
         if isinstance(start, date) and isinstance(end, date):
             p_start, p_end = previous_period(start, end)
@@ -531,6 +516,30 @@ class MetricsDashboardView(LoginRequiredMixin, TemplateView):
             page["presets"] = presets(timezone.now().date(), start, end)
         context.update(page)
 
+        return context
+
+
+class ClientUsageView(LoginRequiredMixin, TemplateView):
+    """Panorama de clientes (actividad, gasto, confianza de extracción, coste). Solo superusuarios."""
+    template_name = "private/metrics/client_usage.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_superuser:
+            raise Http404()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
+        start, end = parse_period(self.request.GET, today)
+        context.update(client_overview(start, end, self.request.GET.get("sort")))
+        context["period"] = {
+            "start": start, "end": end,
+            "start_formatted": format_date(start, format="d MMMM y", locale="es"),
+            "end_formatted": format_date(end, format="d MMMM y", locale="es"),
+            "is_current_month": start == today.replace(day=1) and end == today,
+        }
+        context["presets"] = presets(today, start, end)
         return context
 
 

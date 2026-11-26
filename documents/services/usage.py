@@ -54,34 +54,3 @@ def extraction_usage(client=None, start=None, end=None):
         "by_model": by_model,
         "by_day": by_day,
     }
-
-
-def usage_by_client(start=None, end=None):
-    """Documentos procesados y coste de extracción por cliente (uso interno: cruza tenants).
-
-    Solo debe mostrarse a superusuarios. Ordenado por coste descendente; `share` es el % del coste total.
-    """
-    qs = ExtractionRun.objects.all()
-    if start:
-        qs = qs.filter(created_at__date__gte=start)
-    if end:
-        qs = qs.filter(created_at__date__lte=end)
-    rows = list(
-        qs.values("client_id", "client__name")
-        .annotate(documents=Count("document_id", distinct=True), runs=Count("id"), cost_usd=Sum("cost_usd"))
-        .order_by("-cost_usd", "client__name")
-    )
-    total = sum((r["cost_usd"] or Decimal("0")) for r in rows)
-    out = []
-    for r in rows:
-        cost = r["cost_usd"] or Decimal("0")
-        out.append({
-            "client_id": r["client_id"],
-            "name": r["client__name"],
-            "documents": r["documents"],
-            "runs": r["runs"],
-            "cost_usd": cost,
-            "cost_per_document": cost / r["documents"] if r["documents"] else Decimal("0"),
-            "share": float(cost * 100 / total) if total else 0,
-        })
-    return out

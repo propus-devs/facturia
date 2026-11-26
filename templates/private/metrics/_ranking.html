@@ -1,0 +1,15 @@
+{% if items %}
+<ol class="rank tone-{{ tone }}">
+  {% for r in items %}
+  <li>
+    <div class="rank-line">
+      <span class="rank-pos">{{ forloop.counter }}</span>
+      <span class="rank-name">{{ r.name }}</span>
+      <strong class="rank-value">{% if confidence %}{{ r.value|floatformat:1 }}{% elif cost %}{{ r.value|floatformat:2 }}{% else %}{{ r.value }}{% endif %}{{ suffix }}</strong>
+    </div>
+    {% if confidence %}<small class="muted">{{ r.confidence_docs }} documento{{ r.confidence_docs|pluralize }}</small>{% endif %}
+    <div class="bar"><span style="--pct:{{ r.pct }}%; --bar:var(--tone)"></span></div>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}<p class="empty">{{ empty }}</p>{% endif %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load ui static custom_filters %}
+{% block title %}Uso por cliente - FacturIA{% endblock %}
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+<link rel="stylesheet" href="{% static 'css/metrics/metrics.css' %}">
+<link rel="stylesheet" href="{% static 'css/metrics/client_usage.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home metrics client-usage">
+
+  <header class="hero rise">
+    <div class="hero-text">
+      <p class="hero-eyebrow hero-eyebrow-quiet">Administración · solo superusuarios</p>
+      <h1>Uso por cliente</h1>
+      <p class="hero-sub">
+        {% if period.is_current_month %}Este mes{% else %}{{ period.start_formatted }} – {{ period.end_formatted }}{% endif %}
+        <span class="hero-dot">·</span> actividad, confianza de extracción y coste de todos los clientes
+      </p>
+    </div>
+    <div class="period">
+      <div class="presets" role="group" aria-label="Periodos rápidos">
+        {% for p in presets %}<a class="preset{% if p.active %} active{% endif %}" href="{{ p.query }}&sort={{ sort }}">{{ p.label }}</a>{% endfor %}
+      </div>
+      <form method="get" class="range">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="date" name="start" value="{{ period.start|date:'Y-m-d' }}" aria-label="Desde">
+        <span>→</span>
+        <input type="date" name="end" value="{{ period.end|date:'Y-m-d' }}" aria-label="Hasta">
+        <button type="submit" class="btn btn-primary btn-sm">Ver</button>
+      </form>
+    </div>
+  </header>
+
+  <section class="kpi-grid" aria-label="Resumen de clientes">
+    <article class="kpi-card tone-info rise" style="--i:1">
+      <div class="kpi-head"><span class="kpi-icon">{% icon "clients" %}</span><span class="kpi-label">Clientes con actividad</span></div>
+      <div class="kpi-value">{{ totals.active_clients }}</div>
+      <div class="kpi-foot">de {{ totals.clients }} clientes</div>
+    </article>
+    <article class="kpi-card tone-info rise" style="--i:2">
+      <div class="kpi-head"><span class="kpi-icon">{% icon "document" %}</span><span class="kpi-label">Documentos</span></div>
+      <div class="kpi-value">{{ totals.documents }}</div>
+      <div class="kpi-foot">{% if totals.failed %}{{ totals.failed }} con error de procesado{% else %}sin errores de procesado{% endif %}</div>
+    </article>
+    <article class="kpi-card tone-{{ totals.confidence_tone }} rise" style="--i:3">
+      <div class="kpi-head"><span class="kpi-icon">{% icon "extract" %}</span><span class="kpi-label">Confianza media</span></div>
+      <div class="kpi-value">{% if totals.confidence is not None %}{{ totals.confidence|floatformat:1 }} %{% else %}—{% endif %}</div>
+      <div class="kpi-foot">media ponderada por documento</div>
+    </article>
+    <article class="kpi-card tone-warning rise" style="--i:4">
+      <div class="kpi-head"><span class="kpi-icon">{% icon "balance" %}</span><span class="kpi-label">Coste de extracción</span></div>
+      <div class="kpi-value">{{ totals.cost_usd|floatformat:2 }} US$</div>
+      <div class="kpi-foot">API de Claude en el periodo</div>
+    </article>
+  </section>
+
+  <section class="grid-3">
+    <article class="panel rise" style="--i:6">
+      <div class="panel-head"><h2>{% icon "document" %} Más documentos</h2></div>
+      {% include "private/metrics/_ranking.html" with items=rankings.documents tone="info" suffix="" empty="Sin documentos en el periodo." %}
+    </article>
+    <article class="panel rise" style="--i:7">
+      <div class="panel-head"><h2>{% icon "balance" %} Más coste</h2><span class="panel-note">extracción con IA</span></div>
+      {% include "private/metrics/_ranking.html" with items=rankings.cost tone="warning" suffix=" US$" cost=True empty="Sin extracciones en el periodo." %}
+    </article>
+    <article class="panel rise" style="--i:8">
+      <div class="panel-head"><h2>{% icon "warning" %} Menor confianza</h2><span class="panel-note">a quién vigilar</span></div>
+      {% include "private/metrics/_ranking.html" with items=rankings.low_confidence tone="warning" suffix=" %" confidence=True empty="Sin documentos extraídos en el periodo." %}
+    </article>
+  </section>
+
+  <section class="panel rise" style="--i:9" id="clientes">
+    <div class="panel-head">
+      <h2>{% icon "clients" %} Clientes</h2>
+      <span class="panel-note">Por fecha de subida de los documentos y de ejecución de la extracción</span>
+    </div>
+    {% if rows %}
+    <div class="table-wrapper">
+      <table class="table table-cards">
+        <thead>
+          <tr>
+            {% for key, label, num in columns %}
+            <th{% if num %} class="num"{% endif %}{% if key == sort %} aria-sort="{% if key == "name" or key == "confidence" %}ascending{% else %}descending{% endif %}"{% endif %}>
+              {% if key %}<a class="sort{% if key == sort %} active{% endif %}" href="?start={{ period.start|date:'Y-m-d' }}&end={{ period.end|date:'Y-m-d' }}&sort={{ key }}">{{ label }}</a>{% else %}{{ label }}{% endif %}
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in rows %}
+          <tr{% if not c.is_active %} class="is-inactive"{% endif %}>
+            <td class="cell-primary" data-label="Cliente">{{ c.name }}{% if not c.is_active %} <span class="muted">· inactivo</span>{% endif %}</td>
+            <td class="num" data-label="Docs">{{ c.documents }}{% if c.pending %} <small class="muted" title="Pendientes de revisión">({{ c.pending }} pend.)</small>{% endif %}</td>
+            <td class="num" data-label="Confianza">{% if c.confidence is not None %}<span class="tone-{{ c.confidence_tone }} conf">{{ c.confidence|floatformat:1 }} %</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="num" data-label="Baja confianza">{% if c.low_confidence_pct is not None %}{{ c.low_confidence_pct|floatformat:0 }} %{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="num" data-label="Auto-aprobados">{% if c.auto_pct is not None %}{{ c.auto_pct|floatformat:0 }} %{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="num" data-label="Fallos">{% if c.failed %}<span class="tone-danger conf">{{ c.failed }}</span>{% else %}0{% endif %}</td>
+            <td class="num" data-label="Respaldo Sonnet">{% if c.fallback_pct is not None %}{{ c.fallback_pct|floatformat:0 }} %{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="num" data-label="Coste">{{ c.cost_usd|floatformat:2 }} US$ <small class="muted">({{ c.cost_per_document|floatformat:3 }}/doc)</small></td>
+            <td data-label="Peso coste"><div class="bar"><span style="--pct:{{ c.cost_share|floatformat:0 }}%; --bar:var(--color-warning)"></span></div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="tab-foot"><span><strong>Baja confianza</strong>: documentos por debajo del umbral de respaldo ({{ low_threshold }} %).</span> <span><strong>Respaldo</strong>: documentos que necesitaron el modelo grande.</span></p>
+    {% else %}<p class="empty">Todavía no hay clientes.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}
